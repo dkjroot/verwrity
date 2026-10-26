@@ -1,0 +1,25 @@
+<dialog class="file-dialog scene-metadata-dialog" data-scene-metadata-dialog aria-labelledby="scene-metadata-title">
+  <form data-scene-metadata-form>
+    <div class="file-dialog-heading"><h2 id="scene-metadata-title">Scene metadata</h2><button type="button" data-close-scene-metadata aria-label="Close scene metadata">×</button></div>
+    <div class="scene-metadata-body">
+      <p class="scene-metadata-scene" data-metadata-scene-title></p>
+      <div class="scene-card-identity">
+        <label>Scene name<input name="scene_title" maxlength="500" required aria-label="Scene name"></label>
+        <label>Description<textarea name="scene_summary" rows="3" maxlength="5000" aria-label="Scene description"></textarea></label>
+      </div>
+      <p class="muted">What do you want this scene to do? These notes are optional: leave anything you don't need blank, or write “Not applicable”. They aren't manuscript text, but your model receives them as background for scene reviews and questions.</p>
+      <div class="scene-metadata-fields" data-metadata-fields>
+        {% for field in scene_metadata_fields %}
+        <label{% if field.multiline %} class="scene-metadata-wide"{% endif %}>{{ field.label }}
+          {% if field.multiline %}<textarea name="{{ field.name }}" rows="3" maxlength="2000" aria-label="{{ field.label }}" aria-describedby="metadata-hint-{{ field.name }}"></textarea>
+          {% else %}<input name="{{ field.name }}" maxlength="500" aria-label="{{ field.label }}" aria-describedby="metadata-hint-{{ field.name }}"{% if field.suggestions %} list="scene-metadata-{{ field.name }}"{% endif %}>{% endif %}
+          <small id="metadata-hint-{{ field.name }}">{{ field.hint }}</small>
+        </label>
+        {% if field.suggestions %}<datalist id="scene-metadata-{{ field.name }}">{% for choice in field.suggestions %}<option value="{{ choice }}">{% endfor %}</datalist>{% endif %}
+        {% endfor %}
+      </div>
+      <p class="muted" data-scene-metadata-status role="status" aria-live="polite"></p>
+      <div class="scene-metadata-actions"><button type="button" data-close-scene-metadata>Cancel</button><button type="submit" data-save-scene-metadata>Save metadata</button></div>
+    </div>
+  </form>
+</dialog>

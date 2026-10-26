@@ -1,0 +1,2 @@
+# Use LF for text on every platform; leave binary files unchanged.
+* text=auto eol=lf

@@ -1,0 +1,18 @@
+Bundled English thesaurus: th_en_US_v2.dat (unmodified UTF-8 MyThes data)
+Source: https://github.com/LibreOffice/dictionaries/blob/2f0ddaeeb4323ac99afd35d2c4fda643c9ee8bcf/en/th_en_US_v2.dat
+Retrieved: 2026-10-03
+SHA-256: 8a3e4637450b7277428da248f0a604b5c92942bc30507220c051181462340f39
+
+WordNet 2.1 Copyright 2005 by Princeton University. All rights reserved.
+Licence and disclaimer: WordNet_license.txt in this directory.
+The licence permits use, copying, modification and distribution for any purpose
+without fee or royalty, provided the notices and disclaimer are preserved.
+LibreOffice also uses this same English data for en_GB; its upstream note is
+preserved in README_en_GB_thes.txt. This dataset includes US spellings.
+
+Verwrity reads this replaceable local file with its own small MyThes-format reader.
+It does not bundle or depend on LibreOffice or the MyThes software library.
+Sense groups carry part-of-speech labels and alternatives, not definitions.
+Antonyms, broader (generic) terms, related terms and similar terms retain their
+source relation labels. Lookup does not infer context or inflect alternatives.
+No runtime downloads, external requests, telemetry or AI calls are needed.

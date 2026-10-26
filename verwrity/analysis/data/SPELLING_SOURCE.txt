@@ -1,0 +1,39 @@
+Verwrity English spelling word list
+Upstream: English Speller Database (ESDB, formerly SCOWLv2) rel-2026.02.25
+Generated-output repository revision: 71d7dd07676edb60ade43552e10b41314b7e9287
+Source: https://wordlist.aspell.net/dicts/
+Retrieved: 2026-10-03
+Vocabulary level: standard size 60; US, GB (-ise and -ize), CA, AU.
+Policy: recognize these dialects together; spelling does not enforce dialect consistency.
+Do not merge WordNet or the size-70/80/95 lexicons into this default.
+Larger lexicons admit more rare words that can conceal ordinary typing mistakes.
+Normalization: retain complete tokenizable entries; normalize apostrophes,
+casefold, deduplicate, omit redundant possessives, sort, UTF-8 with LF.
+Compatibility entries retained from the previous SCOWL list: kiev, reactance, trabecula.
+Previous source: https://github.com/ArmiKorhonen/SCOWL-wordlist
+Generated entries: 92290
+Generated SHA-256: 281b634c488494e60f06a40cadb702f04e6463b125722fe54ca514768ecbe25d
+
+Input files and SHA-256:
+https://raw.githubusercontent.com/en-wl/wordlist-diff/rel-2026.02.25/en_US.txt
+  4ff7e0b6d86763e1e042ffd746e94cdf4432618702deac303a1669e2a838db04
+https://raw.githubusercontent.com/en-wl/wordlist-diff/rel-2026.02.25/en_GB-ise.txt
+  82b22843c9958a1efac291e0ea7dbef22ce227dd4e5ca0fd84043cbc62e0a4f1
+https://raw.githubusercontent.com/en-wl/wordlist-diff/rel-2026.02.25/en_GB-ize.txt
+  3ba9391531797b64bf48864f0921de2277596aee06c81e0c44118890338218f7
+https://raw.githubusercontent.com/en-wl/wordlist-diff/rel-2026.02.25/en_CA.txt
+  905b1b6b0a98fcb3701c9c59290a090a4d6ab9127809017fefacbe9c2c6f15a4
+https://raw.githubusercontent.com/en-wl/wordlist-diff/rel-2026.02.25/en_AU.txt
+  d115ebf51c6dcd819c8624019b762c59e185a5c875b97247e5ad2d3d8efe6c1d
+https://raw.githubusercontent.com/en-wl/wordlist-diff/rel-2026.02.25/Copyright
+  090575a131b4260926c7a6b30a90aca0f5db5fbb5c46778e0c5855227bf6ebc3
+
+Full upstream permission, attribution and disclaimers: SCOWL_LICENSE.txt.
+The generated list permits commercial use and remains application analysis data.
+User/project dictionaries and manuscript data are independent.
+
+Rebuild: download the input files above and Copyright from the same release
+into a local source directory, then run:
+  python -m scripts.generate_spelling_dictionary SOURCE_DIRECTORY
+Add --check to verify a rebuild without changing bundled files.
+No network requests occur in the generator or during spelling analysis.

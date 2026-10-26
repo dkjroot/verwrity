@@ -1,0 +1,20 @@
+<section class="workspace-tips" data-workspace-tips hidden aria-label="Hints and developer support">
+  <div class="workspace-tips-heading">
+    <span class="workspace-tips-kicker" data-tip-kicker>Did you know?</span>
+    <button type="button" data-tip-dismiss aria-label="Dismiss hints and support for this session" title="Hide until a full reload or tomorrow">×</button>
+  </div>
+  <div data-tip-content></div>
+  <div class="workspace-tips-footer">
+    <a class="workspace-tip-help" data-tip-help href="{{ url_for('workspace.help_page') }}">Learn more in Help</a>
+    <button type="button" data-tip-next>Next tip →</button>
+  </div>
+</section>
+{% for tip in workspace_tips %}
+<template data-workspace-tip data-kind="{{ tip.kind }}" data-help-url="{{ url_for('workspace.help_page', _anchor=tip.help_topic or None) }}">
+  <h3>{{ tip.title }}</h3>
+  <p>{{ tip.body }}</p>
+  {% if tip.links %}<nav class="workspace-support-links" aria-label="Support the developer">{% for link in tip.links %}
+    <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">{{ link.label }} ↗</a>
+  {% endfor %}</nav>{% endif %}
+</template>
+{% endfor %}

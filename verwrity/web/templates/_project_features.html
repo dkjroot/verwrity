@@ -1,0 +1,24 @@
+<dialog class="file-dialog project-features-dialog" id="project-features-dialog" data-project-id="{{ project.project_id }}" aria-labelledby="project-features-title" aria-describedby="project-features-description">
+  <form data-project-features-form>
+    <div class="file-dialog-heading"><h2 id="project-features-title">Prototype features</h2><button type="button" data-close-project-features aria-label="Close prototype features">×</button></div>
+    <div class="app-dialog-body">
+      <p id="project-features-description">Choose features for <strong>{{ project.title }}</strong>. These settings travel with this project. Use Layout to show or hide panels in this browser.</p>
+      <p class="muted">Maps and character sheets sit alongside your wiki notes. Turn on Fingal mode if you also want to import or export a Fingal story.</p>
+      <fieldset class="project-feature-options">
+        <legend>Writing mode</legend>
+        <label><input type="checkbox" name="fingal_mode" aria-describedby="fingal-mode-description"> Enable Fingal mode</label>
+        <p id="fingal-mode-description">Includes maps, character sheets, item definitions and reviewed Fingal imports/exports. Leave it off if you just want to write.</p>
+      </fieldset>
+      <fieldset class="project-feature-options">
+        <legend>Optional tools for novelists</legend>
+        <label><input type="checkbox" name="map_editor" aria-describedby="map-feature-description"> Map editor</label>
+        <p id="map-feature-description">Plan story locations and connections, without enabling Fingal mode.</p>
+        <label><input type="checkbox" name="character_editor" aria-describedby="character-feature-description"> Game character sheets</label>
+        <p id="character-feature-description">Add stats and equipment beside your character's wiki notes, if they're useful for your story or game.</p>
+        <p class="muted">Both tools are included while Fingal mode is on. Turning it off restores your individual choices. Turning a tool off hides its controls but keeps your work.</p>
+      </fieldset>
+      <p data-project-features-status role="status" aria-live="polite"></p>
+      <div class="app-dialog-actions"><button type="button" data-close-project-features>Close</button><button type="submit" data-save-project-features>Save features</button></div>
+    </div>
+  </form>
+</dialog>

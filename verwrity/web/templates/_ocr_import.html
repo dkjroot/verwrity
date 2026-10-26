@@ -1,0 +1,96 @@
+<dialog id="ocr-import-dialog" class="file-dialog ocr-dialog" aria-labelledby="ocr-title">
+  <div class="file-dialog-heading"><h2 id="ocr-title">Import manuscript pages</h2><button type="button" data-ocr-hide aria-label="Hide OCR import">×</button></div>
+  <div class="ocr-body">
+    <p>Import a video or photos of your pages, then check the thumbnails before running OCR.</p>
+    <aside class="ocr-config-notice" data-ocr-config-notice role="status"><strong data-ocr-config-message></strong></aside>
+    <p data-ocr-providers></p>
+    <aside class="ocr-config-notice" data-ocr-online-notice hidden><strong>Online OCR sends selected manuscript page images off your computer to the configured provider, outside Verwrity's control.</strong><p data-ocr-online-endpoint></p><label><input type="checkbox" data-ocr-image-consent> I allow these manuscript images to be sent to this OCR endpoint.</label></aside>
+    <label data-ocr-consent-label hidden><input type="checkbox" data-ocr-consent><span data-ocr-consent-text></span></label>
+    <h3>Import pages</h3>
+    <div class="ocr-actions">
+      <input type="file" data-ocr-files accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm,.mov,.m4v" multiple hidden>
+      <button type="button" data-ocr-import>Import video / images</button>
+      <button type="button" data-ocr-extract disabled>Extract video frames</button>
+      <label>Video rotation<select data-ocr-video-rotation><option value="0">0°</option><option value="90">90° clockwise</option><option value="180">180°</option><option value="270">270° clockwise</option></select></label>
+      <button type="button" data-ocr-rotate-video>Apply to this video's captures</button>
+      <label>Add images<select data-ocr-placement><option value="end">At end</option><option value="after">After selected page</option></select></label>
+    </div>
+    <details data-ocr-video-panel hidden><summary>Video timeline / add a missed frame</summary>
+      <video data-ocr-video controls preload="metadata"></video>
+      <button type="button" data-ocr-grab>Add current frame</button>
+    </details>
+    <h3>Select pages</h3>
+    <div class="ocr-actions"><label><input type="checkbox" data-ocr-auto-duplicates checked> Automatically uncheck likely repeats</label><label>Similarity threshold %<input type="number" min="50" max="100" step="1" value="75" data-ocr-duplicate-threshold></label><button type="button" data-ocr-duplicates>Recheck duplicate selection</button></div>
+    <div class="ocr-actions"><label><input type="checkbox" data-ocr-show-unchecked checked> Show unchecked thumbnails</label><label><input type="checkbox" data-ocr-prefer-sharpest checked> Prefer stable, sharper similar captures</label></div>
+    <p data-ocr-visible-count></p>
+    <label>Extra words for this import<textarea rows="2" data-ocr-vocabulary placeholder="Words, separated by commas"></textarea></label>
+    <p>LLM review uses your Project Words and any extra words above.</p>
+    <div class="ocr-job-progress" data-ocr-job-progress hidden><span class="ocr-spinner" aria-hidden="true"></span><strong data-ocr-job-stage></strong><progress data-ocr-batch-progress max="1" value="0"></progress><span data-ocr-job-time></span></div>
+    <p data-ocr-status role="status" aria-live="polite"></p>
+    <div class="ocr-actions">
+      <label><input type="checkbox" data-ocr-review-during> Review each page with the LLM after OCR</label>
+      <button type="button" data-ocr-run>Run OCR for checked pages</button>
+      <button type="button" data-ocr-clean-all>Review OCR with LLM</button>
+      <button type="button" data-ocr-cancel>Cancel processing</button>
+      <button type="button" data-ocr-clear>Clear / start fresh</button>
+    </div>
+    <div class="ocr-layout">
+      <nav aria-label="Captured manuscript pages"><div data-ocr-pages></div></nav>
+      <section aria-label="Review selected manuscript page" class="ocr-review">
+        <p data-ocr-page-status></p>
+        <div class="ocr-actions">
+          <label>Candidate frame<select data-ocr-variant></select></label>
+          <button type="button" data-ocr-up>Move up</button><button type="button" data-ocr-down>Move down</button>
+          <button type="button" data-ocr-delete>Delete capture</button>
+          <button type="button" data-ocr-original>View original capture</button>
+          <button type="button" data-ocr-source>Download source image</button>
+        </div>
+        <details><summary>Crop / straighten</summary>
+          <div class="ocr-actions">
+            <label>Left %<input type="number" min="0" max="99" value="0" data-ocr-left></label>
+            <label>Top %<input type="number" min="0" max="99" value="0" data-ocr-top></label>
+            <label>Right %<input type="number" min="1" max="100" value="100" data-ocr-right></label>
+            <label>Bottom %<input type="number" min="1" max="100" value="100" data-ocr-bottom></label>
+            <label>Rotate degrees<input type="number" min="-180" max="180" step="0.5" value="0" data-ocr-rotation></label>
+            <button type="button" data-ocr-adjust>Apply / preview adjustment</button>
+          </div>
+        </details>
+        <div class="ocr-actions"><label>Rotate this page<select data-ocr-page-rotation><option value="0">0°</option><option value="90">90° clockwise</option><option value="180">180°</option><option value="270">270° clockwise</option></select></label><button type="button" data-ocr-rotate-page>Apply page rotation</button></div>
+        <details><summary>Image processing profile</summary>
+          <p>Try 1288 px for olmOCR's longest edge first. A larger image can keep small letters clearer, but may take longer. Brightness, contrast and sharpening can help faint type. Greyscale or black-and-white alone won't reduce the model's image-token count.</p>
+          <div class="ocr-actions">
+            <label>Longest edge (px)<input type="number" min="512" max="3200" step="1" value="1288" data-ocr-profile-edge></label>
+            <label>Brightness<input type="number" min="0.25" max="3" step="0.1" value="1" data-ocr-profile-brightness></label>
+            <label>Contrast<input type="number" min="0.25" max="4" step="0.1" value="1" data-ocr-profile-contrast></label>
+            <label>Sharpness<input type="number" min="0" max="5" step="0.1" value="1" data-ocr-profile-sharpness></label>
+            <label>Colour<select data-ocr-profile-mode><option value="color">Colour</option><option value="gray">Greyscale</option><option value="bw">Black and white</option></select></label>
+            <label>B/W threshold<input type="number" min="1" max="254" step="1" value="160" data-ocr-profile-threshold></label>
+            <label><input type="checkbox" data-ocr-profile-autocontrast> Auto contrast</label>
+          </div>
+          <div class="ocr-actions"><button type="button" data-ocr-profile-preview>Preview profile</button><button type="button" data-ocr-profile-page>Apply to this page</button><button type="button" data-ocr-profile-all>Apply to all</button><button type="button" data-ocr-profile-reset>Reset profile</button></div>
+          <p data-ocr-profile-status role="status"></p>
+        </details>
+        <label>Image zoom<select data-ocr-zoom><option value="height">Fit height</option><option value="fit">Fit width</option><option value="100">100%</option><option value="150">150%</option><option value="200">200%</option></select></label>
+        <div class="ocr-actions"><button type="button" data-ocr-previous>← Previous capture</button><button type="button" data-ocr-next>Next capture →</button><button type="button" data-ocr-keep-capture>Keep this capture</button></div>
+        <div class="ocr-actions"><button type="button" data-ocr-frame-previous>← Earlier video frame</button><button type="button" data-ocr-frame-next>Later video frame →</button><button type="button" data-ocr-frame-keep>Keep this video frame</button><button type="button" data-ocr-video-reselect>Re-select original video</button><input type="file" accept="video/*" data-ocr-video-source hidden></div>
+        <div class="ocr-actions"><button type="button" data-ocr-selected-previous>↑ Previous selected page</button><button type="button" data-ocr-selected-next>↓ Next selected page</button></div>
+        <div class="ocr-actions"><button type="button" data-ocr-frame-reset>Restore saved capture</button></div>
+        <p data-ocr-frame-status role="status"></p>
+        <p data-ocr-comparison-status role="status"></p>
+        <div class="ocr-image-view"><img data-ocr-image alt="Selected source page"></div>
+        <p data-ocr-image-status></p>
+        <div class="ocr-text-comparison">
+          <section class="ocr-transcript-pane"><label for="ocr-raw" class="ocr-transcript-heading">Raw OCR (unchanged)</label><textarea id="ocr-raw" data-ocr-raw readonly rows="8"></textarea></section>
+          <section class="ocr-transcript-pane"><p class="ocr-transcript-heading">Proposed correction · text only</p><div data-ocr-cleaned class="draft-cleanup-preview" tabindex="0"></div></section>
+        </div>
+        <div class="ocr-actions"><button type="button" data-ocr-raw-choice>Keep raw</button><button type="button" data-ocr-clean-choice>Use correction</button><button type="button" data-ocr-approve>Approve edited review</button></div>
+        <label>Your reviewed page<textarea data-ocr-review rows="9"></textarea></label>
+        <div class="ocr-actions"><button type="button" data-ocr-retry>Run / rerun this page OCR</button><button type="button" data-ocr-clean>Rerun LLM review for this page</button></div>
+      </section>
+    </div>
+    <p data-ocr-destination></p>
+    <div class="ocr-actions app-dialog-actions"><button type="button" data-ocr-approve-all>Approve all ready pages</button><button type="button" data-ocr-hide>Hide dialog to choose manuscript caret location</button><button type="button" data-ocr-insert>Insert approved pages</button></div>
+  </div>
+</dialog>
+<link rel="stylesheet" href="{{ url_for('static', filename='ocr-import.css') }}">
+<script type="module" src="{{ url_for('static', filename='ocr-import.js') }}"></script>

@@ -1,0 +1,26 @@
+dialog.speed-reader {
+  position: fixed; inset: 0; width: 100vw; max-width: none; height: 100dvh;
+  max-height: none; margin: 0; padding: 0; border: 0; border-radius: 0;
+  background: #000; color: #ddd; overflow: hidden;
+}
+.speed-reader::backdrop { background: #000; }
+.speed-reader-stage { position: absolute; inset: 0; display: grid; place-items: center; padding: 2vw; pointer-events: none; }
+[data-reader-words] { font-family: serif; font-size: 56px; text-align: center; line-height: 1.35; overflow-wrap: anywhere; max-width: 96vw; }
+.speed-reader-bar { position: absolute; bottom: 0; width: 100%; box-sizing: border-box; background: #090909; color: #858585; padding: 8px 12px; font: 12px/1.4 system-ui, sans-serif; opacity: .65; transition: opacity .15s; }
+.speed-reader-bar:hover, .speed-reader-bar:focus-within { opacity: 1; }
+.speed-reader[data-reading="true"] .speed-reader-bar:not(:hover) { opacity: .4; }
+.speed-reader-controls { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.speed-reader-controls label { display: flex; flex-direction: column; gap: 3px; margin: 0; color: inherit; font: inherit; }
+.speed-reader-controls input, .speed-reader-controls select, .speed-reader-controls button { background: #171717; color: #aaa; border: 1px solid #383838; border-radius: 4px; font: inherit; min-height: 28px; padding: 3px 5px; box-sizing: border-box; margin: 0; }
+.speed-reader-controls input[type=number] { width: 66px; }
+.speed-reader-controls input[type=range] { width: 150px; accent-color: #888; padding: 0; }
+.speed-reader-controls :focus-visible { outline: 2px solid #aaa; outline-offset: 2px; }
+.speed-reader-hint { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; }
+.speed-reader-hint > span:not(.speed-reader-warning) { flex-shrink: 0; }
+.speed-reader-warning { flex: 1; text-align: center; }
+.speed-reader-controls button:disabled { opacity: .45; }
+@media (max-width: 700px) {
+  .speed-reader-hint { flex-wrap: wrap; }
+  .speed-reader-warning { order: 1; flex-basis: 100%; }
+}
+@media (max-height: 500px) { .speed-reader-bar { max-height: 35dvh; overflow-y: auto; } }

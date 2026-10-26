@@ -1,0 +1,28 @@
+{
+  "format": 1,
+  "maps": {
+    "coast": {
+      "initial_location_id": "coast.inn",
+      "editor_note": {"colour": "amber"},
+      "locations": {
+        "coast.inn": {
+          "name": "Lantern Inn", "description": "A lamp burns beside the door.", "x": 0.5, "y": 0,
+          "directions": [{"direction": "east", "next_location_id": "coast.quay", "travel_time": 5, "route_note": "cobbles"}, {"direction": "north", "next_location_id": "", "travel_time": 0}],
+          "inner_locations": [{"label": "Walk to the quay", "target_location_id": "coast.quay", "threshold": "open"}],
+          "items": [], "extra": {"weather": "clear", "custom_rules": {"moon": "full"}}, "custom_scene": [1, 2]
+        },
+        "coast.quay": {"name": "Quay", "description": "The water is still.", "x": 1.5, "y": 0, "items": []}
+      }
+    }
+  },
+  "characters": [{
+    "character_id": "mara", "name": "Mara Vale", "description": "Keeper of the inn.", "home_location": "coast.inn",
+    "bonds": {"traveller": "ally"}, "inventory": [{"item": "key", "overrides": {"description": "Engraved with M"}, "custom_entry": "retained"}],
+    "social_profile": {"disposition": 1, "appearance_preferences": {"common": 1}, "approach_preferences": {"courtesy": "welcome"}},
+    "attributes": [{"name": "craft", "value": 2, "note": "learned"}, {"unmapped": "retained"}],
+    "custom_motivation": {"secret": true}
+  }],
+  "players": [{"character_id": "traveller", "name": "Traveller", "home_location": "coast.quay", "backstory": "Arrived by sea.", "skin_condition": "clean", "custom_player": ["retained"]}],
+  "items": [{"item_id": "key", "name": "Brass key", "portable": true, "unique": false, "stats": {"luck": 0.5}, "price": {"currency": "silver", "amount": 2}, "custom_item": {"lock": "inn"}}],
+  "economy": {"currencies": [{"id": "silver", "name": "Silver", "denominations": [{"name": "penny", "units": 1}]}], "custom_economy": {"season": "autumn"}}
+}

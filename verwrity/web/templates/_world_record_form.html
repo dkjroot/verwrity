@@ -1,0 +1,40 @@
+{% macro fields_ui(rows) %}
+{% for row in rows %}
+{% if row.type == 'object' %}
+<details class="world-field-group" data-record-object="{{ row.name }}">
+  <summary>{{ row.label }}</summary>
+  <label class="world-check"><input type="checkbox" data-record-object-enabled{% if row.enabled %} checked{% endif %}> Include {{ row.label|lower }}</label>
+  <div data-record-object-fields{% if not row.enabled %} hidden{% endif %}>{{ fields_ui(row.fields) }}</div>
+</details>
+{% elif row.type == 'records' %}
+<details class="world-field-group" data-record-list="{{ row.name }}">
+  <summary>{{ row.label }} <span data-record-count>({{ row.rows|length }})</span></summary>
+  <div data-record-rows>{% for entry in row.rows %}<fieldset data-record-row>{{ fields_ui(entry) }}<button type="button" data-remove-record>Remove entry</button></fieldset>{% endfor %}</div>
+  <template data-record-row-template><fieldset data-record-row>{{ fields_ui(row.blank) }}<button type="button" data-remove-record>Remove entry</button></fieldset></template>
+  <button type="button" data-add-record>Add {{ row.label|lower }} entry</button>
+</details>
+{% else %}
+<label class="world-field{% if row.type == 'boolean' %} world-check{% endif %}">
+  <span>{{ row.label }}</span>
+  {% if row.type in ['choice', 'reference'] %}
+  <select data-record-field="{{ row.name }}" data-record-type="{{ row.type }}"{% if row.type == 'reference' %} data-record-nullable{% endif %}>
+    {% if row.type == 'reference' %}<option value="">Not set</option>{% endif %}
+    {% for value, label in row.choices %}<option value="{{ value }}"{% if value == row.value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  {% elif row.type == 'list' or row.limit|default(0) > 2000 %}
+  <textarea rows="{{ 3 if row.type == 'list' else 4 }}" data-record-field="{{ row.name }}" data-record-type="{{ row.type }}"{% if row.required %} required{% endif %} maxlength="{{ row.limit|default(10000) }}">{{ row.value or '' }}</textarea>
+  {% else %}
+  <input type="{{ 'checkbox' if row.type == 'boolean' else 'number' if row.type == 'number' else 'text' }}" data-record-field="{{ row.name }}" data-record-type="{{ row.type }}"{% if row.optional %} data-record-nullable{% endif %}{% if row.type == 'boolean' %}{% if row.value %} checked{% endif %}{% else %} value="{{ row.value if row.value is not none else '' }}"{% endif %}{% if row.required or (row.type == 'number' and not row.optional) %} required{% endif %}{% if row.type == 'number' %} min="{{ row.min|default(0) }}" max="{{ row.max|default(1000000) }}" step="{{ row.step|default('1') }}"{% endif %}{% if row.type == 'text' %} maxlength="{{ row.limit|default(500) }}"{% endif %}>
+  {% endif %}
+  {% if row.help %}<small>{{ row.help }}</small>{% endif %}
+</label>
+{% endif %}
+{% endfor %}
+{% endmacro %}
+<form novalidate class="world-record-form" data-world-record-form data-page-id="{{ page.id }}" data-kind="{{ kind }}" data-revision="{{ world_revision }}" data-page-hash="{{ page_hash_value }}" data-project-id="{{ project.project_id }}">
+  <h3>{{ 'Character sheet' if kind == 'character' else 'Item definition' if kind == 'item' else 'Map location' }} · {{ page.title }}</h3>
+  <p class="wiki-editor-help">{{ 'Imported from Fingal; your edits are kept separately from the original.' if page.world.source else 'These are your settings for the world at the start of the game.' }} Saving this form leaves your wiki notes, citations and manuscript alone.</p>
+  <div data-record-root>{{ fields_ui(record_fields) }}</div>
+  <p data-world-form-status role="status" aria-live="polite"></p>
+  <div class="wiki-page-actions"><button type="submit">Save {{ 'character sheet' if kind == 'character' else 'item' if kind == 'item' else 'location' }}</button><button type="button" data-cancel-world-record>Cancel</button></div>
+</form>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Verwrity{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon" sizes="16x16 24x24 32x32 48x48 64x64 128x128 256x256">
+  <script>try { document.documentElement.dataset.theme = localStorage.getItem("verwrity-theme") || "dark"; } catch (_) { document.documentElement.dataset.theme = "dark"; }</script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='editor.css') }}">
+  <script src="{{ url_for('static', filename='theme.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='menus.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='panels.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='dialogs.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='server-connection.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='workspace-tips.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='manuscript.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='text-analysis.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='ai-models.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='project-question.js') }}" defer></script>
+  <script type="module" src="{{ url_for('static', filename='stt-settings.js') }}"></script>
+  <script type="module" src="{{ url_for('static', filename='project-words.js') }}"></script>
+  <script type="module" src="{{ url_for('static', filename='ocr-settings.js') }}"></script>
+  <script type="module" src="{{ url_for('static', filename='ai-model-tests.js') }}"></script>
+  <script type="module" src="{{ url_for('static', filename='dictation.js') }}"></script>
+  <script type="module" src="{{ url_for('static', filename='dictate-draft.js') }}"></script>
+  <script src="{{ url_for('static', filename='storyboard.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='scene-metadata.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='project-features.js') }}" defer></script>
+  <script type="module" src="{{ url_for('static', filename='world-workspace.js') }}"></script>
+  <script src="{{ url_for('static', filename='editor.bundle.js') }}" defer></script>
+</head>
+<body {% block body_attributes %}{% endblock %}>
+  <dialog class="file-dialog app-dialog" id="server-connection-dialog" aria-labelledby="server-connection-title" aria-describedby="server-connection-message">
+    <div class="file-dialog-heading"><h2 id="server-connection-title">Verwrity server unavailable</h2></div>
+    <div class="app-dialog-body">
+      <p id="server-connection-message">This tab cannot reach the Verwrity server. It may have stopped or the connection may have been lost. Start Verwrity again to continue.</p>
+      <p>Your edits are still in this tab. Keep it open; do not reload or close it while the server is unavailable.</p>
+      <p>This message will close automatically when the server responds. Manuscript autosave will retry; retry any failed wiki or project save afterwards.</p>
+      <p data-server-status role="status">Checking the server…</p>
+      <div class="app-dialog-actions"><button type="button" data-check-server>Check now</button></div>
+    </div>
+  </dialog>
+  <dialog class="file-dialog app-dialog" id="app-dialog" aria-labelledby="app-dialog-title" aria-describedby="app-dialog-message">
+    <form data-app-dialog-form>
+      <div class="file-dialog-heading"><h2 id="app-dialog-title" data-app-dialog-title>Confirm action</h2><button type="button" data-app-dialog-close aria-label="Close dialog">×</button></div>
+      <div class="app-dialog-body">
+        <p id="app-dialog-message" data-app-dialog-message></p>
+        <label for="app-dialog-input" data-app-dialog-input-label hidden>Value</label>
+        <input id="app-dialog-input" data-app-dialog-input hidden>
+        <div class="app-dialog-actions"><button type="button" data-app-dialog-cancel>Cancel</button><button type="submit" data-app-dialog-accept>Continue</button></div>
+      </div>
+    </form>
+  </dialog>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}<p class="notice {{ category }}" role="status"><span>{{ message }}</span><button type="button" data-dismiss-notice aria-label="Dismiss notification">×</button></p>{% endfor %}
+  {% endwith %}
+  {% block body %}{% endblock %}
+</body>
+</html>

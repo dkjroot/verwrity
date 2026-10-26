@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}{{ scene.title }} · Scene history · Verwrity{% endblock %}
+{% block body %}
+<main class="historical-scene-page">
+  <a href="{{ url_for('workspace.index') }}">← Back to workspace</a>
+  <p class="muted">Historical scene</p>
+  <h1>{{ scene.title }}</h1>
+  {% if scene.summary %}<p class="historical-scene-summary">{{ scene.summary }}</p>{% endif %}
+  <article class="historical-scene-text" aria-label="Scene text">{{ scene.text }}</article>
+  <div class="historical-scene-actions">
+    <form method="post" action="{{ url_for('scenes.restore_scene', scene_id=scene.id) }}">
+      <button type="submit">Restore scene</button>
+    </form>
+    <form method="post" action="{{ url_for('scenes.permanently_delete_scene', scene_id=scene.id) }}" data-confirm-permanent-delete>
+      <button type="submit" class="danger-button">Delete permanently</button>
+    </form>
+  </div>
+</main>
+{% endblock %}

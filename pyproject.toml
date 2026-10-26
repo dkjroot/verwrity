@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "verwrity"
+version = "0.1.0"
+description = "A Python-first writing and story-development environment."
+license = "GPL-3.0-only"
+license-files = ["license.txt", "THIRD_PARTY_NOTICES.txt", "third_party/*.txt"]
+requires-python = ">=3.11"
+dependencies = ["Flask>=3.1,<4"]
+
+[project.optional-dependencies]
+local-tts = ["kokoro-onnx>=0.6,<1", "soundfile>=0.12,<1", "onnxruntime>=1.17,<2"]
+local-tts-cuda = ["kokoro-onnx>=0.6,<1", "soundfile>=0.12,<1", "onnxruntime-gpu>=1.17,<2"]
+remote-tts = ["edge-tts>=7.2,<8"]
+local-stt = ["faster-whisper>=1.2,<2"]
+audio-import = ["av>=14,<20"]
+ocr-import = ["Pillow>=11.3,<13", "av>=14,<20"]
+local-ocr = ["Pillow>=11.3,<13", "av>=14,<20", "torch>=2.6,<3", "torchvision>=0.21,<1", "transformers>=5.0,<6", "accelerate>=1,<2"]
+
+[project.scripts]
+verwrity = "verwrity.web.app:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+include = ["verwrity*"]
+
+[tool.setuptools.package-data]
+"verwrity.analysis" = ["data/*.txt", "data/*.dat"]

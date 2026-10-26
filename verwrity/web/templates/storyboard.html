@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Storyboard · {{ project.title }} · Verwrity{% endblock %}
+{% block body %}
+<header class="toolbar"><h1>Verwrity</h1><span class="project-name">{{ project.title }}</span>
+  <a class="panel-toggle toolbar-link" href="{{ url_for('workspace.index') }}" data-board-return>Back to writing</a>
+  {% include '_project_settings_menu.html' %}
+  <a class="panel-toggle toolbar-link" href="{{ url_for('workspace.help_page') }}">Help</a>
+  <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle dark mode"><span data-theme-icon aria-hidden="true">☾</span> <span data-theme-label>Dark mode</span></button>
+</header>
+{% include '_project_features.html' %}
+<main class="storyboard-page">
+  <header class="storyboard-page-heading">
+    <div><p class="help-kicker">Story structure</p><h2>Storyboard</h2><p>Plan scene order, descriptions, and the details that change across your story.</p></div>
+    <nav class="storyboard-view-switch" aria-label="Storyboard view">
+      <a class="panel-toggle toolbar-link{% if view == 'notes' %} is-current{% endif %}" href="{{ url_for('workspace.storyboard', view='notes') }}" data-board-view-switch="notes" {% if view == 'notes' %}aria-current="page"{% endif %}>Sticky notes</a>
+      <a class="panel-toggle toolbar-link{% if view == 'grid' %} is-current{% endif %}" href="{{ url_for('workspace.storyboard', view='grid') }}" data-board-view-switch="grid" {% if view == 'grid' %}aria-current="page"{% endif %}>Grid</a>
+    </nav>
+  </header>
+  <p class="typewriter-board-notice" data-typewriter-board-notice hidden>Scene titles are read-only while Typewriter Mode is active. Turn it off from the writing view to rename scenes.</p>
+  {% if view == 'notes' %}
+  <form class="storyboard-board" method="post" action="{{ url_for('scenes.save_storyboard') }}" data-storyboard-board aria-label="Storyboard scenes">
+    {% for scene in project.current_scenes() %}
+    {% set default_note_colors = ['#f5e8a9', '#f2dda0', '#f6edbd'] %}
+    {% set note_color = scene.note_color or default_note_colors[loop.index0 % 3] %}
+    <article class="story-note" data-story-note data-scene-id="{{ scene.id }}" style="--story-note-color: {{ note_color }}" aria-label="{{ scene.title }} scene note">
+      <input type="hidden" name="scene_id" value="{{ scene.id }}">
+      <div class="story-note-heading"><h3 tabindex="0" data-note-title>{{ scene.title }}</h3><input name="title_{{ scene.id }}" value="{{ scene.title }}" maxlength="500" aria-label="Scene title" data-note-title-input hidden><button class="story-note-drag-handle" type="button" draggable="true" data-note-drag-handle aria-label="Drag {{ scene.title }} to reorder">⠿</button></div>
+      <label class="story-note-summary-label" for="summary-{{ scene.id }}">Description</label>
+      <textarea id="summary-{{ scene.id }}" class="story-note-summary" name="summary_{{ scene.id }}" rows="3" placeholder="What happens in this scene?">{{ scene.summary }}</textarea>
+      <button type="button" class="story-note-metadata-button" data-open-scene-metadata="{{ scene.id }}" aria-label="Scene metadata for {{ scene.title }}">Metadata</button>
+      {% set viewpoint = scene.metadata.pov_character or scene.metadata.narrator or scene.metadata.narrative_perspective %}
+      <p class="story-note-metadata-preview" data-scene-metadata-preview="{{ scene.id }}">{{ viewpoint }}{% if scene.metadata.location %}{% if viewpoint %} · {% endif %}{{ scene.metadata.location }}{% endif %}</p>
+      <div class="story-note-footer"><span class="story-note-word-count" title="Words in this scene">{{ scene.text.split()|length }} words</span><div class="story-note-controls" aria-label="Scene actions for {{ scene.title }}">
+        <label class="story-note-color-picker" title="Choose note color"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1.2a2 2 0 0 0 1.4-3.4 1.5 1.5 0 0 1 1.1-2.6H18a3 3 0 0 0 3-3c0-5-4-9-9-9Z"/><path d="M7.5 12h.01M10 7.5h.01M15 7.5h.01M17 11h.01"/></svg><input type="color" name="note_color_{{ scene.id }}" value="{{ note_color }}" data-note-color aria-label="Color for {{ scene.title }} note"></label>
+        <button type="button" data-note-move="earlier" aria-label="Move {{ scene.title }} earlier" {% if loop.first %}disabled{% endif %}>↑</button>
+        <button type="button" data-note-move="later" aria-label="Move {{ scene.title }} later" {% if loop.last %}disabled{% endif %}>↓</button>
+        <button type="submit" name="intent" value="delete" data-note-delete="{{ scene.id }}" aria-label="Delete {{ scene.title }}">×</button>
+      </div></div>
+    </article>
+    {% endfor %}
+    <section class="story-note story-note-new" aria-labelledby="new-scene-heading">
+      <h3 id="new-scene-heading">New scene</h3>
+      <label class="story-note-summary-label" for="new-scene-title">Title</label>
+      <input id="new-scene-title" name="new_scene_title" class="story-note-new-title" placeholder="Scene title">
+      <label class="story-note-summary-label" for="new-scene-summary">Description</label>
+      <textarea id="new-scene-summary" name="new_scene_summary" class="story-note-summary" rows="3" placeholder="What happens in this scene?"></textarea>
+      <button class="story-note-add" type="submit" name="intent" value="add">Add scene</button>
+    </section>
+    <input type="hidden" name="delete_scene_id" value="">
+    <button class="visually-hidden" type="submit" name="intent" value="view_grid" data-switch-grid tabindex="-1" aria-hidden="true">Switch to grid</button>
+    <button class="storyboard-save-order" type="submit" name="intent" value="save" data-board-save>Save and return to writing</button>
+  </form>
+  <p class="storyboard-save-status" data-storyboard-status role="status" aria-live="polite">Drag a note by its grip, or use the arrows. Edit descriptions underneath each title, then save to return to writing.</p>
+  {% else %}
+  <form class="storyboard-grid-form" method="post" action="{{ url_for('storyboard.save_grid') }}" data-storyboard-grid-form>
+    <input type="hidden" name="delete_column_id" value="">
+    <div class="storyboard-grid-scroll" role="region" aria-label="Storyboard scene details" tabindex="0">
+      <table class="storyboard-grid">
+        <thead><tr>
+          <th class="grid-scene-title" scope="col">Scene</th>
+          <th class="grid-scene-summary" scope="col">Description</th>
+          {% for column in project.storyboard_columns %}
+          <th class="grid-custom-column" scope="col">
+            <input type="hidden" name="column_id" value="{{ column.id }}">
+            <div class="grid-column-heading"><input name="column_title_{{ column.id }}" value="{{ column.title }}" aria-label="Column title: {{ column.title }}"><button type="submit" name="intent" value="delete_column" data-delete-column="{{ column.id }}" aria-label="Delete column {{ column.title }}">×</button></div>
+          </th>
+          {% endfor %}
+        </tr></thead>
+        <tbody>
+          {% for scene in project.current_scenes() %}
+          <tr>
+            <th class="grid-scene-title" scope="row"><input type="hidden" name="scene_id" value="{{ scene.id }}"><input name="scene_title_{{ scene.id }}" value="{{ scene.title }}" aria-label="Scene title"><button type="button" class="grid-scene-metadata-button" data-open-scene-metadata="{{ scene.id }}" aria-label="Scene metadata for {{ scene.title }}">Metadata</button></th>
+            <td class="grid-scene-summary"><textarea name="scene_summary_{{ scene.id }}" rows="2" aria-label="Description for {{ scene.title }}">{{ scene.summary }}</textarea></td>
+            {% for column in project.storyboard_columns %}
+            <td><textarea name="cell_{{ scene.id }}_{{ column.id }}" rows="2" aria-label="{{ column.title }} for {{ scene.title }}">{{ project.storyboard_value(scene.id, column.id) }}</textarea></td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="storyboard-grid-actions">
+      <div class="grid-add-column"><label for="new-column-title">Add a column</label><input id="new-column-title" name="new_column_title" placeholder="e.g. Alice and Bob"><button type="submit" name="intent" value="add_column">Add column</button></div>
+      <button class="visually-hidden" type="submit" name="intent" value="view_notes" data-switch-notes tabindex="-1" aria-hidden="true">Switch to Sticky notes</button>
+      <span class="view-spacer"></span>
+      <button class="storyboard-save-order" type="submit" name="intent" value="return" data-grid-save>Save and return to writing</button>
+    </div>
+  </form>
+  <p class="storyboard-save-status">Edit titles, descriptions, and custom scene details in the table. The header row and scene-title column stay visible as you scroll.</p>
+  {% endif %}
+</main>
+{% include "scene_metadata_dialog.html" %}
+{% endblock %}

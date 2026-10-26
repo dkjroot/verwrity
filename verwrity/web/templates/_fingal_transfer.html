@@ -1,0 +1,10 @@
+{% if project.features.fingal_mode %}
+<div data-fingal-file-rows>
+  <form class="file-row" data-fingal-import><div><strong>Import Fingal story</strong><label for="fingal-story-file">Game JSON file</label></div><input id="fingal-story-file" type="file" name="story_file" accept=".json,.fingal.json" required><button type="submit">Review import</button></form>
+  <div class="file-row"><div><strong>Export Fingal story</strong><span>Review the current starting world</span></div><button type="button" data-fingal-export>Review export</button></div>
+</div>
+<dialog class="file-dialog" data-fingal-review aria-labelledby="fingal-review-title">
+  <div class="file-dialog-heading"><h2 id="fingal-review-title">Fingal story review</h2><button type="button" data-fingal-close aria-label="Close review">×</button></div>
+  <div class="start-dialog-body"><div data-fingal-report></div><p role="status" data-fingal-status></p><button type="button" data-fingal-accept hidden></button></div>
+</dialog>
+{% endif %}

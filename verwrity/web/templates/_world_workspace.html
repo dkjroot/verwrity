@@ -1,0 +1,26 @@
+{% if project.features.map_enabled or project.features.characters_enabled %}
+<div data-world-fragment data-project-id="{{ project.project_id }}" data-fingal-enabled="{{ 'true' if project.features.fingal_mode else 'false' }}" data-map-enabled="{{ 'true' if project.features.map_enabled else 'false' }}" data-character-enabled="{{ 'true' if project.features.characters_enabled else 'false' }}">
+  {% include '_fingal_transfer.html' %}
+  <div data-world-actions>
+    {% if project.features.map_enabled %}<button class="panel-toggle" type="button" data-open-world-map aria-pressed="false">Map</button>{% endif %}
+    {% if project.features.characters_enabled %}<button class="panel-toggle" type="button" data-new-world-character>New character</button>{% endif %}
+    {% if project.features.fingal_mode %}<button class="panel-toggle" type="button" data-new-world-item>New item</button>{% endif %}
+  </div>
+  {% if project.features.map_enabled %}
+  <div data-map-nav hidden>
+    <div class="storyboard-heading"><h2>Maps</h2><button type="button" data-new-world-map aria-label="New map">+</button></div>
+    <label class="world-field"><span>Current map</span><select data-world-map-select></select></label>
+    <p class="wiki-editor-help">Select a location to open its wiki page. Click an empty cell to add a location.</p>
+    <ul class="world-location-list" data-world-location-list></ul>
+  </div>
+  <section class="panel world-map-panel" data-world-map-panel hidden aria-label="Map editor">
+    <div class="panel-heading"><h2 data-world-map-title>Map</h2><button type="button" data-return-manuscript>Back to manuscript</button></div>
+    <div class="world-map-toolbar"><button type="button" data-new-world-map>New map</button><button type="button" data-rename-world-map>Rename map</button><button type="button" data-delete-world-map>Delete empty map</button><button type="button" data-reload-world>Reload map</button></div>
+    <p class="wiki-editor-help">These are the starting locations you've chosen. North is up, and arrows show routes. Click a character's name to open their wiki page.</p>
+    <p data-world-map-status role="status" aria-live="polite"></p>
+    <div class="world-map-scroll"><div class="world-map-grid" data-world-map-grid aria-label="Map cells"></div></div>
+    <div class="world-map-selection" data-world-selection></div>
+  </section>
+  {% endif %}
+</div>
+{% endif %}

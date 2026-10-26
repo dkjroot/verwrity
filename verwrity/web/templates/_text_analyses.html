@@ -1,0 +1,24 @@
+{% for analysis in text_analyses %}
+<section class="text-analysis" data-text-analysis="{{ analysis.id }}">
+  <div class="text-analysis-controls">
+    <button type="button" class="annotation-toggle" data-toggle-text-analysis aria-label="{{ analysis.name }} highlighting" aria-pressed="false">{{ analysis.name }}</button>
+    <button type="button" class="analysis-icon-button" data-run-text-analysis aria-label="Run {{ analysis.name }} on current scene" title="Run {{ analysis.name }} on current scene"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 7v5h-5M18.2 12a6.5 6.5 0 1 0-1.4 5.5M19 12l-3-3"/></svg></button>
+    <button type="button" class="analysis-icon-button" data-cancel-text-analysis aria-label="Cancel {{ analysis.name }}" title="Cancel {{ analysis.name }}" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+    <details class="annotation-picker text-analysis-style-picker">
+      <summary aria-label="{{ analysis.name }} annotation style" title="{{ analysis.name }} annotation style"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14M5 9h14M5 13h14M5 18h14"/><path d="m7 21 2-2 2 2 2-2 2 2 2-2"/></svg></summary>
+      <div class="annotation-picker-content"><label>{{ analysis.name }} style<select data-text-analysis-style aria-label="{{ analysis.name }} style">{% for value, label in [('highlight', 'Highlight'), ('underline', 'Underline'), ('squiggly', 'Squiggly underline'), ('double', 'Double underline')] %}<option value="{{ value }}"{% if analysis.style == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label></div>
+    </details>
+    <label class="annotation-color" style="--selected-annotation-color: {{ analysis.color }}" title="{{ analysis.name }} highlight colour"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1.2a2 2 0 0 0 1.4-3.4 1.5 1.5 0 0 1 1.1-2.6H18a3 3 0 0 0 3-3c0-5-4-9-9-9Z"/><path d="M7.5 12h.01M10 7.5h.01M15 7.5h.01M17 11h.01"/></svg><input type="color" value="{{ analysis.color }}" data-text-analysis-color aria-label="{{ analysis.name }} highlight colour"></label>
+    <details class="annotation-picker text-analysis-options">
+      <summary aria-label="{{ analysis.name }} options" title="{{ analysis.name }} options"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></summary>
+      <div class="text-analysis-option-menu">
+        <button type="button" data-clear-text-analysis>Clear findings</button>
+        <button type="button" data-edit-text-analysis>{{ 'Edit prompt' if analysis.builtin else 'Edit analysis' }}</button>
+        {% if analysis.builtin %}<button type="button" data-restore-text-analysis{% if not analysis.prompt_overridden %} disabled{% endif %}>Restore default</button>{% else %}<button type="button" data-delete-text-analysis>Delete analysis</button>{% endif %}
+      </div>
+    </details>
+  </div>
+  <p data-text-analysis-status role="status" aria-live="polite" hidden>Ready · current scene</p>
+  <details data-text-analysis-findings hidden><summary>Findings</summary><ul></ul></details>
+</section>
+{% endfor %}

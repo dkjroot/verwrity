@@ -1,0 +1,30 @@
+<dialog id="speaker-dialog" class="file-dialog dialogue-tools-dialog" aria-labelledby="speaker-title">
+  <form data-speaker-form>
+    <div class="file-dialog-heading"><h2 id="speaker-title">Label dialogue speaker</h2><button type="button" data-close-tool aria-label="Close">×</button></div>
+    <div class="scene-dialog-body"><blockquote data-speaker-quote></blockquote>
+      <div data-speaker-picker></div>
+      <p class="muted">Creating a character adds an empty wiki page with the character tag.</p>
+      <p data-speaker-error role="status"></p><button type="submit">Save speaker</button>
+    </div>
+  </form>
+</dialog>
+<dialog id="dialogue-dialog" class="file-dialog dialogue-dialog dialogue-tools-dialog" aria-labelledby="dialogue-title">
+  <div class="file-dialog-heading"><h2 id="dialogue-title">Dialogue</h2><button type="button" data-close-tool aria-label="Close">×</button></div>
+  <div class="scene-dialog-body"><p data-dialogue-status role="status" aria-live="polite"></p>
+    <div data-dialogue-list></div>
+    <div class="app-dialog-actions"><button type="button" data-cancel-dialogue-analysis hidden>Cancel speaker extraction</button><button type="button" data-accept-dialogue hidden>Accept selected assignments</button><button type="button" data-evaluate-dialogue hidden>Evaluate this voice (AI)</button></div>
+    <p class="muted" data-voice-disclosure hidden>Evaluation sends this speaker's linked dialogue, nearby text, descriptions and your scene notes to the model you've chosen.</p>
+    <div data-dialogue-observations></div>
+  </div>
+</dialog>
+<dialog id="scene-structure-dialog" class="file-dialog dialogue-tools-dialog" aria-labelledby="structure-title">
+  <form data-structure-form><div class="file-dialog-heading"><h2 id="structure-title">Edit scene structure</h2><button type="button" data-close-tool aria-label="Close">×</button></div>
+    <div class="scene-dialog-body"><p data-structure-existing></p>
+      <p class="muted" data-structure-consequences></p>
+      <label><span data-structure-title-label>Resulting scene title</span><input name="title" required maxlength="500"></label>
+      <label>Description<textarea name="summary" rows="4" maxlength="5000"></textarea></label>
+      <label data-join-separator>Join separator<select name="separator"><option value="blank">Blank line (two newlines)</option><option value="line">One newline</option><option value="none">No separator</option></select></label>
+      <p data-structure-error role="status"></p><div class="app-dialog-actions"><button type="submit">Apply structural edit</button></div>
+    </div>
+  </form>
+</dialog>

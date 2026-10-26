@@ -1,0 +1,182 @@
+Third-party components retain their own licenses independently of Verwrity's GPLv3.
+Reviewed 20 October 2026. Dependencies installed separately are not relicensed
+as Verwrity code. Keep their full notices and any required corresponding source
+when distributing them or a bundled runtime.
+
+Verwrity includes the following browser editor components:
+
+Tiptap 3.31.3
+Packages: @tiptap/core, @tiptap/pm, @tiptap/starter-kit and their runtime
+dependencies.
+License: MIT
+Copyright (c) 2025, Tiptap GmbH
+Source: https://github.com/ueberdosis/tiptap
+
+tiptap-pagination-plus 3.1.0
+License: MIT
+Copyright (c) Romik Makavana
+Source: https://github.com/RomikMakavana/tiptap-pagination-plus
+
+The complete npm runtime package/version inventory and original package license
+texts (including ProseMirror, linkifyjs, orderedmap, rope-sequence, w3c-keyname,
+and every installed Tiptap runtime package) are retained in:
+  third_party/browser-editor-licenses.txt
+That file preserves copyright notices beyond the two top-level packages below.
+The npm pagination package declares MIT but ships no standalone LICENSE file;
+its author credit and MIT terms are retained here and in that inventory.
+
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+English Speller Database (ESDB, formerly SCOWLv2) generated spelling list
+Source: https://wordlist.aspell.net/dicts/ (release 2026.02.25)
+Generated sources: https://github.com/en-wl/wordlist-diff/tree/rel-2026.02.25
+License: permissive SCOWL notice; full upstream copyright, permission and
+disclaimers are preserved in verwrity/analysis/data/SCOWL_LICENSE.txt, including
+Benjamin Titze's notice for Australian English. Commercial use is permitted.
+The bundled standard size-60 list recognizes American, British (-ise/-ize),
+Canadian and Australian English, with three valid legacy compatibility entries.
+Pinned sources, checksums, generation policy and rebuild instructions are in
+verwrity/analysis/data/SPELLING_SOURCE.txt. It is replaceable application analysis
+data; it never changes manuscript text or user/project dictionaries.
+
+Kokoro-ONNX (optional local text-to-speech runtime)
+  License: MIT
+  Source: https://github.com/thewh1teagle/kokoro-onnx
+
+Kokoro-82M model weights (downloaded separately by the user)
+  License: Apache-2.0
+  Source: https://huggingface.co/hexgrad/Kokoro-82M
+
+ONNX Runtime (optional local text-to-speech inference)
+  License: MIT
+  Source: https://github.com/microsoft/onnxruntime
+
+SoundFile (optional WAV encoding for local text-to-speech)
+  License: BSD-3-Clause
+  Source: https://github.com/bastibe/python-soundfile
+
+edge-tts (optional remote text-to-speech client)
+  License: LGPL-3.0; one included source file is MIT-licensed
+  Source: https://github.com/rany2/edge-tts
+
+Kokoro-ONNX release model assets (optional local text-to-speech)
+  License: Apache-2.0
+  Source: https://github.com/thewh1teagle/kokoro-onnx/releases/tag/model-files-v1.0
+
+Faster Whisper (optional local speech recognition)
+  License: MIT
+  Source: https://github.com/SYSTRAN/faster-whisper
+
+Whisper model weights, converted by SYSTRAN (downloaded explicitly)
+  License: MIT
+  Source: https://huggingface.co/Systran/faster-whisper-base.en
+  Original: https://github.com/openai/whisper
+
+CTranslate2 (optional local speech-recognition inference)
+  License: MIT
+  Source: https://github.com/OpenNMT/CTranslate2
+
+PyAV and its dynamically linked FFmpeg libraries (optional audio/video decoding)
+  Licenses: PyAV BSD-3-Clause; FFmpeg LGPL-2.1-or-later or GPL depending on build
+  Sources: https://github.com/PyAV-Org/PyAV and https://ffmpeg.org/legal.html
+  The PyAV wheel bundles FFmpeg; no separate FFmpeg command is required.
+  Inspect the exact wheel and FFmpeg build before redistributing it. Retain its
+  notices and satisfy the applicable corresponding-source/relinking obligations;
+  this entry does not certify every wheel, codec combination, or installer.
+
+Optional local manuscript OCR dependencies and separately installed models
+  Pillow: HPND (https://github.com/python-pillow/Pillow)
+  PyTorch and torchvision: BSD-3-Clause (https://github.com/pytorch/pytorch,
+    https://github.com/pytorch/vision)
+  Transformers and Accelerate: Apache-2.0
+    (https://github.com/huggingface/transformers, https://github.com/huggingface/accelerate)
+  olmOCR-2-7B-1025 weights: Apache-2.0
+    (https://huggingface.co/allenai/olmOCR-2-7B-1025)
+  PaddleOCR-VL-1.6 weights: Apache-2.0
+    (https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6)
+  Models are not bundled or downloaded during inference. Retain their original
+  licences/notices if redistributing weights or a prepared runtime. CUDA wheel
+  dependencies retain their own vendor terms; this list does not certify a bundle.
+
+Hugging Face Hub, tokenizers, and hf-xet (optional model/runtime dependencies)
+  License: Apache-2.0
+  Sources: https://github.com/huggingface/huggingface_hub,
+    https://github.com/huggingface/tokenizers, https://github.com/huggingface/xet-core
+  Hub telemetry is disabled before import; model downloads are explicit.
+
+Additional optional STT runtime dependencies
+  NumPy: BSD-3-Clause (https://github.com/numpy/numpy)
+  PyYAML: MIT (https://github.com/yaml/pyyaml)
+  tqdm: MIT and MPL-2.0 (https://github.com/tqdm/tqdm)
+  ONNX Runtime: MIT (listed above; used by the offline speech activity detector)
+
+English offline thesaurus (WordNet-derived MyThes data)
+  Source: https://github.com/LibreOffice/dictionaries/blob/2f0ddaeeb4323ac99afd35d2c4fda643c9ee8bcf/en/th_en_US_v2.dat
+  License: WordNet 2.1, permissive use for any purpose, including commercial use.
+  Copyright 2005 by Princeton University. All rights reserved.
+  Full copyright notice, terms, and disclaimer are distributed with the data in
+  verwrity/analysis/data/WordNet_license.txt. Pinned source and SHA-256 are recorded
+  in verwrity/analysis/data/THESAURUS_SOURCE.txt. The data file is unmodified.
+  No LibreOffice or MyThes library code is bundled for this feature.
+
+Core Python server and declared requirements
+  Flask, Werkzeug, Jinja2, MarkupSafe, itsdangerous, and Click: BSD-3-Clause
+    Sources: https://palletsprojects.com/ and the individual Pallets repositories
+    Copyright: Pallets and the respective project contributors; preserve each
+    installed distribution's full copyright and license text.
+  Blinker: MIT
+    Source: https://github.com/pallets-eco/blinker
+    Credit: Jason Kirtland and contributors
+  Colorama (conditional Windows Click dependency): BSD-3-Clause
+    Source: https://github.com/tartley/colorama
+    Credit: Jonathan Hartley and contributors
+  coverage (development / present in requirements.txt): Apache-2.0
+    Source: https://github.com/nedbat/coveragepy
+    Credit: Ned Batchelder and contributors; retain its LICENSE and NOTICE.
+
+Build and browser testing (development dependencies, not runtime app libraries)
+  esbuild 0.19.12: MIT, Evan Wallace and contributors
+    Source: https://github.com/evanw/esbuild
+  Playwright 1.62.1: Apache-2.0, Microsoft and contributors
+    Source: https://github.com/microsoft/playwright
+    Browser downloads have their own component licenses and are not bundled in
+    this source checkout. Audit them separately if packaging a test/runtime image.
+
+Additional observed optional-STT dependencies (installed separately)
+  anyio, filelock, h11: MIT
+  httpx, httpcore, fsspec, idna: BSD-3-Clause
+  certifi: MPL-2.0 (Mozilla CA data; preserve applicable source availability)
+  packaging: Apache-2.0 OR BSD-2-Clause
+  typing_extensions: PSF-2.0
+  flatbuffers: Apache-2.0; protobuf: BSD-3-Clause
+  Sources: https://pypi.org/ (each package's official project/source links and
+    installed metadata identify the exact upstream distribution and authors).
+  These entries describe the locally inspected environment, not a lock for every
+  supported optional extra. Preserve native component notices, such as ONNX
+  Runtime's ThirdPartyNotices.txt and NumPy's wheel-specific licenses.
+
+Distribution scope
+  This review covers the current source checkout, bundled browser dependencies,
+  bundled dictionaries, and identified optional integrations. Model weights and
+  separately installed native/Python distributions retain their own terms.
+  Before publishing an installer or dependency bundle, audit its exact contents,
+  retain all required notices, and provide corresponding source where required.
+  See LICENSING.md for Verwrity's GPLv3 transition and authors' ownership of writing.

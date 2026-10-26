@@ -1,0 +1,21 @@
+<dialog id="speed-reader" aria-label="Speed reader" class="speed-reader">
+  <div class="speed-reader-stage"><div data-reader-words></div></div>
+  <div class="speed-reader-bar">
+    <div class="speed-reader-controls">
+      <button type="button" data-reader-play autofocus>Play</button>
+      <button type="button" data-reader-restart>Restart</button>
+      <label>Start<select data-reader-start><option value="caret">Current caret</option><option value="scene">Scene beginning</option><option value="manuscript">Manuscript beginning</option></select></label>
+      <label>End<select data-reader-end><option value="scene">Current scene</option><option value="manuscript">Manuscript</option></select></label>
+      <label>Words<input data-reader-size type="number" min="1" max="20" value="1"></label>
+      <label class="reader-speed">Speed<input data-reader-wpm type="range" min="30" max="2000" step="10" value="240"><output data-reader-timing></output></label>
+      <label>Flash (ms)<input data-reader-visible type="number" min="1" step="any" value="250"></label>
+      <label>Repeats<input data-reader-repeats type="number" min="1" max="20" value="1"></label>
+      <label>Font<select data-reader-font><option value="serif">Serif</option><option value="sans-serif">Sans serif</option><option value="monospace">Monospace</option></select></label>
+      <label>Size (px)<input data-reader-font-size type="number" min="16" max="160" value="56"></label>
+      <button type="button" data-reader-exit>Exit</button>
+    </div>
+    <div class="speed-reader-hint"><span data-reader-status role="status">Paused</span><span class="speed-reader-warning">Warning: some settings cause flashing text. Avoid these settings if you are sensitive to flashing graphics.</span><span>Space: pause/resume · Esc: exit</span></div>
+  </div>
+</dialog>
+<link rel="stylesheet" href="{{ url_for('static', filename='speed-reader.css') }}">
+<script type="module" src="{{ url_for('static', filename='speed-reader.js') }}"></script>

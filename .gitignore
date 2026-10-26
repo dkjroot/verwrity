@@ -1,0 +1,87 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+**/venv
+.venv/
+node_modules/
+
+# Local user projects. These are application data, never source-controlled.
+user_files/
+*~
+
+# Local agent guidance and working notes.
+AGENTS.md
+DEVELOPMENT.md
+agent_docs/
+
+# Build products and Python/tool caches.
+build/
+dist/
+.eggs/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.cache/
+.coverage.*
+coverage/
+coverage.xml
+*.tsbuildinfo
+*.map
+
+# Disposable browser output and local test runtimes (not guide screenshots).
+.test-runtime/
+test-results/
+playwright-report/
+playwright/.cache/
+blob-report/
+artifacts/
+test-artifacts/
+*.log
+*.log.*
+*.pid
+*.pid.lock
+
+# Local configuration, credentials and editor state.
+.env
+.env.*
+!.env.example
+!.env.sample
+.vscode/
+.idea/
+.codex/
+.agents/
+.aws/
+*.pem
+*.key
+
+# Temporary files, editor backups and OS metadata.
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.orig
+*.rej
+*.swp
+*.swo
+*.un~
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Private story exports and downloaded model weights.
+*.verwrity.zip
+*.fingal.json
+models/
+*.gguf
+*.onnx
+*.safetensors
+
+# Legacy agent-note names: keep accidental copies local too.
+OBSERVATIONS.md
+WIKI-AI-IMPLEMENTATION.md
+**/*_TODO.md

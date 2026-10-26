@@ -1,0 +1,458 @@
+{% extends "base.html" %}
+{% block title %}{{ project.title }} · Verwrity{% endblock %}
+{% block body_attributes %}class="writing-workspace"{% endblock %}
+{% block body %}
+<header class="toolbar"><h1>Verwrity</h1><span class="project-name">{{ project.title }}</span>
+  <button class="panel-toggle" type="button" data-file-operations aria-haspopup="dialog">File operations</button>
+  <button class="panel-toggle project-save" type="button" data-save-project title="Save project (Ctrl+S)">Save</button>
+  <span data-world-controls></span>
+  <fieldset class="display-options"><legend>Display options</legend>
+  <button class="panel-toggle" type="button" data-panel-toggle="storyboard" aria-controls="storyboard-panel" aria-pressed="true">Storyboard</button>
+  <button class="panel-toggle" type="button" data-panel-toggle="wiki" aria-controls="wiki-panel" aria-pressed="true">Wiki</button>
+  <details class="focus-menu">
+    <summary class="panel-toggle" data-focus-toggle>Focus <span class="writing-mode-indicator" data-writing-mode-indicator data-mode="normal" role="status" aria-live="polite">
+    <span class="writing-mode-indicator-icon" aria-hidden="true"></span><span data-writing-mode-label>Normal mode</span>
+  </span></summary>
+    <div class="focus-menu-content"><button type="button" data-standard-focus-toggle aria-pressed="false">Focus Mode</button><button type="button" data-typewriter-toggle aria-pressed="false">Typewriter Mode</button></div>
+  </details>
+  <button class="panel-toggle" type="button" data-speed-reader-open>Speed reader</button>
+  <details class="layout-menu">
+    <summary class="panel-toggle">Layout</summary>
+    <div class="focus-menu-content">
+      <button type="button" data-maximize-editor aria-pressed="false">Hide editor controls</button>
+      <button type="button" data-hide-toolbar>Hide main toolbar</button>
+      <button type="button" data-hide-manuscript-controls>Hide manuscript controls</button>
+          <button type="button" data-restore-default-layout>Restore default layout</button>
+    </div>
+  </details>
+  <button class="panel-toggle" type="button" data-caret-movement-toggle aria-pressed="false" hidden>Unlock caret</button>
+  <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle dark mode"><span data-theme-icon aria-hidden="true">☾</span> <span data-theme-label>Dark mode</span></button>
+  </fieldset>
+  {% include '_project_settings_menu.html' %}
+  <a class="panel-toggle toolbar-link" href="{{ url_for('workspace.help_page') }}">Help</a>
+</header>
+{% include '_project_features.html' %}
+{% include '_speed_reader.html' %}
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+<details class="writing-restore-controls" hidden>
+  <summary aria-label="Writing workspace controls" title="Restore writing workspace">Workspace</summary>
+  <div class="writing-restore-actions">
+  <button type="button" data-restore-editor hidden>Show editor controls</button>
+  <button type="button" data-exit-focus hidden>Exit focus</button>
+  <button type="button" data-show-toolbar hidden>Show toolbar</button>
+  <button class="project-save" type="button" data-save-project>Save changes</button>
+  <span data-world-restore-controls></span>
+  </div>
+</details>
+<dialog class="file-dialog" id="file-dialog" aria-labelledby="file-dialog-title">
+  <div class="file-dialog-heading"><h2 id="file-dialog-title">File operations</h2><button type="button" data-close-file-dialog aria-label="Close file operations">×</button></div>
+  <div class="file-dialog-rows">
+    <form method="post" action="{{ url_for('projects.new_project') }}" class="file-row"><div><strong>New project</strong><span>Start with a blank project</span></div><button type="submit">New</button></form>
+    <form method="post" action="{{ url_for('projects.library_open_project') }}" class="file-row"><div><strong>Open project</strong><label for="project-library">Saved project</label></div><select id="project-library" name="project_filename"><option value="">Choose a saved project</option>{% for filename in library_projects %}<option value="{{ filename }}">{{ filename.removesuffix(".verwrity.zip") }}</option>{% endfor %}</select><button type="submit">Open</button></form>
+    <form id="save-project-form" method="post" action="{{ url_for('projects.library_save_project') }}" class="file-row"><div><strong>Save project</strong><label for="project-title">Project name</label></div><input id="project-title" name="project_title" value="{{ project.title }}" required><input type="hidden" name="manuscript"><button type="submit">Save</button></form>
+    <form method="post" action="{{ url_for('projects.duplicate_project') }}" class="file-row"><div><strong>Duplicate project</strong><label for="duplicate-title">New project name</label></div><input id="duplicate-title" name="duplicate_title" placeholder="Copy name"><button type="submit">Duplicate</button></form>
+    <form method="post" action="{{ url_for('projects.open_project') }}" enctype="multipart/form-data" class="file-row"><div><strong>Import project</strong><label for="project-file">ZIP archive</label></div><input id="project-file" type="file" name="project_file" accept=".zip,.verwrity.zip" required><button type="submit">Import</button></form>
+    <div class="file-row"><div><strong>Manuscript backup</strong><span>Current manuscript as plain text</span></div><button type="button" data-export-manuscript>Download .txt</button></div>
+    <form id="export-project-form" method="post" action="{{ url_for('projects.save_project') }}" class="file-row"><div><strong>Export project</strong><span>Download a portable ZIP copy</span></div><input type="hidden" name="project_title"><input type="hidden" name="manuscript"><button type="submit">Export</button></form>
+  </div>
+</dialog>
+<dialog class="file-dialog app-dialog" id="manuscript-export-dialog" aria-labelledby="manuscript-export-title">
+  <div class="file-dialog-heading"><h2 id="manuscript-export-title">Export manuscript</h2><button type="button" data-close-manuscript-export aria-label="Close manuscript export">×</button></div>
+  <form class="app-dialog-body" data-manuscript-export-form>
+    <label class="manuscript-export-options"><input type="checkbox" name="include_scene_details" checked> Include scene titles and descriptions</label>
+    <div class="app-dialog-actions"><button type="button" data-close-manuscript-export>Cancel</button><button type="submit">Download .txt</button></div>
+  </form>
+</dialog>
+<main class="workspace" data-workspace data-project-id="{{ project.project_id }}" data-project-needs-save="{{ 'true' if project_needs_save else 'false' }}" data-recovery-needs-save="{{ 'true' if recovery_needs_save else 'false' }}" aria-label="Story workspace">
+  <aside class="panel storyboard" id="storyboard-panel"><div class="storyboard-heading"><h2>Storyboard</h2><a class="panel-toggle toolbar-link storyboard-open-link" href="{{ url_for('workspace.storyboard') }}" data-storyboard-link>Go to Storyboard</a><button type="button" data-add-scene aria-label="Add scene">+</button></div><p class="muted">Scenes</p><ol>
+    {% set word_counts = namespace(total=0) %}
+    {% for scene in project.current_scenes() %}{% set scene_word_count = scene.text.split()|length %}{% set word_counts.total = word_counts.total + scene_word_count %}<li class="scene-row{% if active_scene and scene.id == active_scene.id %} selected{% endif %}{% if scene.note_color %} has-note-color{% endif %}" data-scene-id="{{ scene.id }}"{% if scene.note_color %} style="--scene-note-color: {{ scene.note_color }}"{% endif %}>
+      <form method="post" action="{{ url_for('scenes.select_scene', scene_id=scene.id) }}"><button class="scene" type="submit" title="{{ scene.summary }}">{{ scene.title }}</button></form><span class="scene-word-count" data-scene-word-count="{{ scene.id }}" title="Words in this scene">{{ scene_word_count }}</span>
+      <span class="scene-controls"><form method="post" action="{{ url_for('scenes.move_scene', scene_id=scene.id) }}"><input type="hidden" name="direction" value="up"><button type="submit" aria-label="Move {{ scene.title }} up">↑</button></form><form method="post" action="{{ url_for('scenes.move_scene', scene_id=scene.id) }}"><input type="hidden" name="direction" value="down"><button type="submit" aria-label="Move {{ scene.title }} down">↓</button></form><form method="post" action="{{ url_for('scenes.remove_scene', scene_id=scene.id) }}" data-confirm-remove><button type="submit" aria-label="Remove {{ scene.title }}">×</button></form></span>
+    </li>{% endfor %}
+  </ol>{% if not project.current_scenes() %}<div class="storyboard-empty"><p>No scenes yet. Start with one scene; you can add, move, and develop more as your story takes shape.</p><button type="button" data-add-scene>Create your first scene</button></div>{% endif %}<p class="muted">Historical</p><ul class="historical-scenes">{% for scene in project.scenes if scene.historical %}<li><a href="{{ url_for('scenes.view_historical_scene', scene_id=scene.id) }}">{{ scene.title }}</a></li>{% else %}<li class="empty-history">Removed scenes will be kept here.</li>{% endfor %}</ul><p class="storyboard-total-word-count" title="Total words in the current manuscript">Total <span data-manuscript-word-count>{{ word_counts.total }}</span></p></aside>
+  <div class="column-resizer storyboard-resizer" data-column-resizer="storyboard" role="separator" aria-orientation="vertical" aria-label="Resize storyboard panel" aria-controls="storyboard-panel" tabindex="0"></div>
+  <section class="panel manuscript">
+    <div class="panel-heading"><h2>Manuscript</h2><div class="save-indicator"><span class="status" data-save-status role="status" aria-live="polite">Draft saved</span><button type="button" class="retry-save" data-retry-save hidden>Retry save</button><span class="analysis-stale-status" data-analysis-stale-status role="status" aria-live="polite" hidden>Analysis is stale</span><button type="button" class="retry-save" data-rerun-analysis hidden>Rerun analysis</button></div></div>
+    <div class="editor-toolbar" aria-label="Writing view options">
+      <details class="editor-menu view-menu">
+        <summary>View</summary>
+        <div class="editor-menu-content">
+          <label>View<select data-view-mode><option value="continuous">Continuous</option><option value="pages">Pages</option></select></label>
+          <label>Page size<select data-page-size><option value="a4">A4</option><option value="letter">US Letter</option><option value="six-nine">Paperback 6 × 9 in</option><option value="five-five-eight-five">Paperback 5.5 × 8.5 in</option></select></label>
+          <label>Layout<select data-page-layout><option value="single">Single page</option><option value="spread">Side by side</option></select></label>
+          <div class="editor-menu-actions"><button type="button" data-fit-view="width" aria-pressed="true">Fit width</button><button type="button" data-fit-view="height" aria-pressed="false">Fit height</button></div>
+          <label><input type="checkbox" data-paragraph-indentation checked> Show paragraph indentation</label>
+          <label><input type="checkbox" data-section-markers> Show section-start markers</label>
+
+          <label>Font<select data-manuscript-setting="font_family"><option value="sans-serif">Sans serif</option><option value="serif">Serif</option></select></label>
+          <label>Size<select data-manuscript-setting="font_size"><option value="14">14 px</option><option value="16">16 px</option><option value="18">18 px</option><option value="20">20 px</option><option value="22">22 px</option></select></label>
+          <label>Text color<input type="color" value="#eee9df" data-manuscript-setting="text_color"></label>
+          <label>Background color<input type="color" value="#282621" data-manuscript-setting="background_color"></label>
+                </div>
+      </details>
+      <details class="editor-menu editing-menu">
+        <summary>Edit</summary>
+        <div class="editor-menu-content">
+          <label>Sentence spacing<select data-sentence-spacing><option value="typed">As typed</option><option value="1">One space</option><option value="2">Two spaces</option></select></label>
+          <button type="button" data-apply-sentence-spacing>Apply spacing to current scene</button>
+          <button type="button" data-normalize-spaces>Normalize spaces in current scene</button>
+          <button type="button" data-mark-paragraph="running">Mark current paragraph as running</button>
+          <button type="button" data-mark-paragraph="section">Mark current paragraph as fresh section</button>
+          <p class="muted" data-editing-format-status role="status"></p>
+        </div>
+      </details>
+      {% if active_scene %}<details class="editor-menu versions-menu" data-scene-revision-controls data-scene-id="{{ active_scene.id }}">
+        <summary>Versions</summary>
+        <script type="application/json" data-revision-list>{{ scene_revisions|tojson }}</script>
+        <script type="application/json" data-revision-head>{{ {"text": active_scene.text, "comments": scene_comments, "dialogue": scene_dialogue}|tojson }}</script>
+        <div class="editor-menu-content">
+          <label>Version<select data-scene-revision-select aria-label="View scene version"><option value="head">Head · draft {{ active_scene.next_revision_number() }}</option>{% for revision in active_scene.revisions|reverse %}<option value="{{ revision.id }}">Revision {{ revision.number }}</option>{% endfor %}</select></label>
+          <button type="button" data-record-scene-revision>Record revision</button>
+          <button type="button" data-restore-scene-revision hidden>Copy to new head</button>
+          <label>Compare from<select data-scene-diff-left></select></label>
+          <label>Compare to<select data-scene-diff-right></select></label>
+          <button type="button" data-compare-scene-revisions>Compare versions</button>
+        </div>
+      </details>{% endif %}
+      <details class="editor-menu analysis-menu">
+        <summary>Analysis</summary>
+        <div class="editor-menu-content annotation-settings">
+          <div class="annotation-options-row" aria-label="Annotation display options">
+            <div class="annotation-option-group" data-annotation-controls="spelling">
+              <button type="button" class="annotation-toggle" data-annotation-toggle="spelling" aria-label="Spelling highlighting" aria-pressed="false">Spelling</button>
+              <button type="button" class="analysis-icon-button" data-run-spelling aria-label="Refresh spelling" title="Refresh spelling"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 7v5h-5M18.2 12a6.5 6.5 0 1 0-1.4 5.5M19 12l-3-3"/></svg></button>
+              <details class="annotation-picker">
+                <summary aria-label="Spelling highlight style" title="Spelling highlight style"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14M5 9h14M5 13h14M5 18h14"/><path d="m7 21 2-2 2 2 2-2 2 2 2-2"/></svg></summary>
+                <div class="annotation-picker-content"><label>Highlight style<select data-annotation-style="spelling" disabled><option value="squiggly">Squiggly underline</option><option value="underline">Underline</option><option value="double">Double underline</option><option value="highlight">Highlight</option></select></label></div>
+              </details>
+              <label class="annotation-color is-disabled" title="Spelling highlight color"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1.2a2 2 0 0 0 1.4-3.4 1.5 1.5 0 0 1 1.1-2.6H18a3 3 0 0 0 3-3c0-5-4-9-9-9Z"/><path d="M7.5 12h.01M10 7.5h.01M15 7.5h.01M17 11h.01"/></svg><input type="color" value="#ef4444" data-annotation-color="spelling" aria-label="Spelling highlight color" disabled></label>
+              <span class="analysis-control-spacer" aria-hidden="true"></span>
+            </div>
+            <div class="annotation-option-group" data-annotation-controls="wiki_links">
+              <button type="button" class="annotation-toggle" data-annotation-toggle="wiki_links" aria-label="Wiki link highlighting" aria-pressed="false">Wiki</button>
+              <span class="analysis-control-spacer" aria-hidden="true"></span>
+              <details class="annotation-picker">
+                <summary aria-label="Wiki link highlight style" title="Wiki link highlight style"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14M5 9h14M5 13h14M5 18h14"/><path d="m7 21 2-2 2 2 2-2 2 2 2-2"/></svg></summary>
+                <div class="annotation-picker-content"><label>Highlight style<select data-annotation-style="wiki_links" disabled><option value="underline">Underline</option><option value="squiggly">Squiggly underline</option><option value="double">Double underline</option><option value="highlight">Highlight</option></select></label></div>
+              </details>
+              <label class="annotation-color is-disabled" title="Wiki link highlight color"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1.2a2 2 0 0 0 1.4-3.4 1.5 1.5 0 0 1 1.1-2.6H18a3 3 0 0 0 3-3c0-5-4-9-9-9Z"/><path d="M7.5 12h.01M10 7.5h.01M15 7.5h.01M17 11h.01"/></svg><input type="color" value="#4f8fba" data-annotation-color="wiki_links" aria-label="Wiki link highlight color" disabled></label>
+              <span class="analysis-control-spacer" aria-hidden="true"></span>
+            </div>
+            <div class="annotation-option-group" data-annotation-controls="comments">
+              <button type="button" class="annotation-toggle" data-annotation-toggle="comments" aria-label="Comment highlighting" aria-pressed="false">Comments</button>
+              <span class="analysis-control-spacer" aria-hidden="true"></span>
+              <details class="annotation-picker">
+                <summary aria-label="Comment highlight style" title="Comment highlight style"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14M5 9h14M5 13h14M5 18h14"/><path d="m7 21 2-2 2 2 2-2 2 2 2-2"/></svg></summary>
+                <div class="annotation-picker-content"><label>Highlight style<select data-annotation-style="comments" disabled><option value="underline">Underline</option><option value="squiggly">Squiggly underline</option><option value="double">Double underline</option><option value="highlight">Highlight</option></select></label></div>
+              </details>
+              <label class="annotation-color is-disabled" title="Comment highlight color"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1.2a2 2 0 0 0 1.4-3.4 1.5 1.5 0 0 1 1.1-2.6H18a3 3 0 0 0 3-3c0-5-4-9-9-9Z"/><path d="M7.5 12h.01M10 7.5h.01M15 7.5h.01M17 11h.01"/></svg><input type="color" value="#8b72c7" data-annotation-color="comments" aria-label="Comment highlight color" disabled></label>
+              <details class="annotation-picker text-analysis-options"><summary aria-label="Comments options">⋯</summary><div class="text-analysis-option-menu"><button type="button" data-open-comments>Review comments</button></div></details>
+            </div>
+
+          </div>
+            <section class="text-analysis dialogue-analysis" data-dialogue-analysis data-annotation-controls="dialogue">
+              <div class="text-analysis-controls">
+              <button type="button" class="annotation-toggle" data-annotation-toggle="dialogue" aria-label="Dialogue highlighting" aria-pressed="false">Dialogue speakers</button>
+              <button type="button" class="analysis-icon-button" data-extract-dialogue aria-label="Extract dialogue speakers from current scene" title="Extract dialogue speakers from current scene"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 7v5h-5M18.2 12a6.5 6.5 0 1 0-1.4 5.5M19 12l-3-3"/></svg></button>
+              <button type="button" class="analysis-icon-button" data-cancel-dialogue-analysis aria-label="Cancel speaker extraction" title="Cancel speaker extraction" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+              <details class="annotation-picker">
+                <summary aria-label="Dialogue highlight style" title="Dialogue highlight style"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14M5 9h14M5 13h14M5 18h14"/><path d="m7 21 2-2 2 2 2-2 2 2 2-2"/></svg></summary>
+                <div class="annotation-picker-content"><label>Highlight style<select data-annotation-style="dialogue" disabled><option value="underline">Underline</option><option value="squiggly">Squiggly underline</option><option value="double">Double underline</option><option value="highlight">Highlight</option></select></label></div>
+              </details>
+              <label class="annotation-color is-disabled" title="Dialogue highlight color"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1.2a2 2 0 0 0 1.4-3.4 1.5 1.5 0 0 1 1.1-2.6H18a3 3 0 0 0 3-3c0-5-4-9-9-9Z"/><path d="M7.5 12h.01M10 7.5h.01M15 7.5h.01M17 11h.01"/></svg><input type="color" value="#0d9488" data-annotation-color="dialogue" aria-label="Dialogue highlight color" disabled></label>
+              <details class="annotation-picker text-analysis-options">
+                <summary aria-label="Dialogue speakers options" title="Dialogue speakers options"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></summary>
+                <div class="text-analysis-option-menu"><button type="button" data-review-dialogue-analysis>Review speakers</button></div>
+              </details>
+              </div>
+              <p data-dialogue-analysis-status role="status" aria-live="polite"></p>
+                </section>
+          <div class="text-analyses" data-text-analyses>{% include '_text_analyses.html' %}</div>
+          <script type="application/json" data-text-analysis-definitions>{{ text_analysis_definitions|tojson }}</script>
+          <details class="custom-text-analysis">
+            <summary data-text-analysis-form-title>Add a custom text analysis</summary>
+            <form data-text-analysis-form>
+              <input type="hidden" name="identity">
+              <label>Name<input name="name" maxlength="80" required></label>
+              <label>What should the model look for?<textarea name="prompt" maxlength="8000" rows="4" required></textarea></label>
+              <p data-text-analysis-prompt-note hidden>This prompt overrides the built-in default for you across all projects. Restore default removes your override.</p>
+              <label>Highlight colour<input type="color" name="color" value="#8b5cf6"></label>
+              <button type="submit">Save analysis</button><button type="button" data-restore-text-analysis-form hidden>Restore default</button><button type="button" data-reset-text-analysis-form>Cancel edit</button>
+              <p data-text-analysis-form-status role="status" aria-live="polite"></p>
+            </form>
+          </details>
+        </div>
+      </details>
+      <details class="editor-menu"><summary>Scene tools</summary><div class="editor-menu-content">
+        <button type="button" data-draft-open>Dictate draft</button>
+        <button type="button" data-ocr-open>Import manuscript pages (OCR)</button>
+        <button type="button" data-assign-speaker>Label selected dialogue</button>
+        <button type="button" data-review-dialogue>Review scene dialogue</button>
+        <button type="button" data-split-scene>Split at caret / selection start</button>
+        <button type="button" data-join-scenes>Join with next scene</button>
+        <button type="button" data-export-manuscript>Download manuscript (.txt)</button>
+      </div></details>
+        <details class="editor-menu project-question-tasks">
+          <summary aria-label="Manuscript analysis tasks" title="Run an analysis across the whole manuscript">Manuscript tools</summary>
+          <div class="editor-menu-content">
+            <strong>Tools for the whole manuscript</strong>
+            {% for task in manuscript_tasks %}
+            <button type="button" data-manuscript-task="{{ task.id }}" data-task-name="{{ task.name }}">{{ task.name }}</button>
+            {% endfor %}
+          </div>
+        </details>
+      <span class="view-spacer"></span>
+      <button type="button" data-read-scene{% if not active_scene %} disabled{% endif %}>Read scene</button>
+      <button type="button" data-open-scene-metadata="{{ active_scene.id if active_scene else '' }}"{% if not active_scene %} disabled{% endif %}>Scene metadata</button>
+      <button type="button" class="find-open-button" data-open-find aria-label="Find in manuscript" title="Find in manuscript (Ctrl+F)">Find</button>
+      <button type="button" class="dictation-button" data-dictation-target="manuscript" aria-label="Start manuscript dictation" title="Start manuscript dictation">🎙</button>
+      <button type="button" data-toggle-ai-highlight aria-label="AI passage highlighting" aria-pressed="true" hidden>AI highlight</button>
+      <span class="manuscript-count-status" data-writing-count-status title="Page number / words in this scene" aria-label="Page number and scene word count"></span>
+      <span class="analysis-status" data-analysis-status role="status" aria-live="polite"></span>
+    </div>
+    <div class="scene-audio-status text-analysis-progress" data-text-analysis-progress role="status" aria-live="polite" hidden>
+      <span class="scene-audio-spinner" aria-hidden="true"></span><strong>Analysing scene</strong><span data-text-analysis-progress-message></span>
+      <button type="button" data-open-text-analysis-controls>Analysis controls</button>
+    </div>
+    <div class="scene-audio-status" data-scene-audio-status role="status" aria-live="polite" hidden>
+      <span class="scene-audio-spinner" aria-hidden="true"></span><strong>Preparing scene audio</strong><span data-scene-audio-message>Generating speech…</span>
+    </div>
+    <div class="scene-audio-status project-question-progress" data-project-question-progress role="status" aria-live="polite" hidden>
+      <span class="scene-audio-spinner" aria-hidden="true"></span><strong data-project-question-progress-title>Asking about the project</strong><span data-project-question-progress-message>Waiting for the model…</span>
+      <button type="button" data-dismiss-project-question-progress aria-label="Dismiss progress message">×</button>
+    </div>
+    <div class="scene-audio-playback" data-scene-audio-playback hidden>
+      <audio class="scene-audio" data-scene-audio controls preload="auto"></audio>
+      <button type="button" data-clear-scene-audio aria-label="Clear read-aloud audio" title="Clear read-aloud audio">Clear</button>
+    </div>
+    <p class="writing-view-note" data-spread-unavailable hidden>Two-page scrolling is unavailable in this browser. Single-page and continuous views are available.</p>
+    <div class="editor-body">
+    <div class="editor-viewport" data-editor-viewport>
+      <input type="hidden" name="manuscript" form="save-project-form" id="manuscript-form-value">
+      <div class="editor-stage" data-editor-stage data-layout="continuous">
+        <div class="editor-track" data-editor-track>
+          <div class="editor" data-rich-editor data-source-hash="{{ scene_source_hash }}" data-scene-id="{{ active_scene.id if active_scene else '' }}" data-initial-text="{{ active_scene.text if active_scene else '' }}" data-initial-dialogue='{{ scene_dialogue|tojson|forceescape }}' data-initial-comments='{{ scene_comments|tojson|forceescape }}' data-ai-passage-start="{{ request.args.get('ai_start', '') }}" data-ai-passage-end="{{ request.args.get('ai_end', '') }}" aria-label="Manuscript editor"></div>
+        </div>
+      </div>
+    </div>
+    <aside class="text-overview" data-text-overview aria-label="Text outline map">
+      <div class="text-overview-heading"><span>Text map</span><span class="muted" data-text-overview-count></span></div>
+      <button class="text-overview-map" data-text-overview-map type="button" aria-label="Text outline map"></button>
+    </aside>
+    </div>
+    <form class="manuscript-find-bar" data-find-bar hidden role="search" aria-label="Find and replace in manuscript">
+      <label>Find<input type="search" data-find-query autocomplete="off"></label>
+      <label>Replace with<input type="text" data-find-replacement></label>
+      <label>Scope<select data-find-scope><option value="current_scene">Current scene</option><option value="project">Entire project</option></select></label>
+      <label class="find-case-option"><input type="checkbox" data-find-case-sensitive> Match case</label>
+      <span class="find-count" data-find-count role="status" aria-live="polite"></span>
+      <button type="button" data-find-run>Find</button>
+      <button type="button" data-find-previous aria-label="Previous match" disabled>↑ Previous</button>
+      <button type="button" data-find-next aria-label="Next match" disabled>Next ↓</button>
+      <button type="button" data-find-replace>Replace</button>
+      <button type="button" data-find-replace-all>Replace all</button>
+      <button type="button" data-close-find aria-label="Close find and replace">Close</button>
+    </form>
+    <section class="project-question-dock" data-project-question-dock aria-label="Ask about the project">
+      <div class="project-question-transcript" data-project-question-answer hidden aria-live="polite" aria-relevant="additions text"></div>
+      <div class="project-selected-context" data-selected-question-context hidden>
+        <div><strong data-selected-question-label>Selected passage only</strong><button type="button" data-clear-question-context>Use project context</button></div>
+        <blockquote data-selected-question-preview></blockquote>
+        <small>Only this passage is included. Project ranges, wiki pages and earlier conversation are excluded.</small>
+      </div>
+      <form class="project-question-form" data-project-question-form>
+        <details class="project-question-options">
+          <summary aria-label="Project question context settings" title="Choose what project text to include">Context</summary>
+          <div class="project-question-options-popover">
+            <strong>Project context</strong>
+            <label>Context source<select name="context_mode" data-question-context-mode><option value="project">Project context</option><option value="selection" disabled>Selected passage only</option></select></label>
+            <div class="project-context-range" data-project-context-range>
+            <label>Include earlier manuscript <output data-before-value>100%</output><input name="before_percent" type="range" min="0" max="100" step="5" value="100"></label>
+            <label>Include later manuscript <output data-after-value>100%</output><input name="after_percent" type="range" min="0" max="100" step="5" value="100"></label>
+            <label class="ai-consent"><input name="include_wiki" type="checkbox" checked><span>Include the whole human-authored wiki</span></label>
+            </div>
+          </div>
+        </details>
+        <label class="project-question-input-label"><span class="visually-hidden">Ask anything about the project</span><textarea name="question" rows="1" maxlength="4000" required placeholder="Ask anything about your manuscript and wiki…"></textarea></label>
+        <label class="answer-speaker" title="Read answers aloud"><input name="read_aloud" type="checkbox" disabled aria-label="Read answers aloud"><span aria-hidden="true">♫</span></label>
+        <button type="button" class="dictation-button" data-dictation-target="question" aria-label="Start question dictation" title="Start question dictation">🎙</button>
+        <button type="submit" data-project-question-submit>Ask</button>
+        <button type="button" data-cancel-project-question hidden>Cancel</button>
+        <button type="button" data-collapse-project-question hidden aria-label="Hide answer">Hide answer</button>
+        <button type="button" data-clear-project-question aria-label="Clear AI conversation" disabled>Clear</button>
+        <span class="project-question-status" data-project-question-status role="status" aria-live="polite"></span>
+      </form>
+    </section>
+  </section>
+  <div class="column-resizer wiki-resizer" data-column-resizer="wiki" role="separator" aria-orientation="vertical" aria-label="Resize wiki panel" aria-controls="wiki-panel" tabindex="0"></div>
+  <aside class="panel wiki" id="wiki-panel" data-wiki-panel data-initial-page="{{ request.args.get('wiki_page', '') }}">
+    <div data-wiki-content>
+    <div class="wiki-heading"><h2>Wiki</h2><button type="button" data-wiki-new>+ New page</button></div>
+    {% if wiki_error %}<p class="wiki-error" role="alert">{{ wiki_error }}</p>{% endif %}
+    <label class="wiki-search-label" for="wiki-search">Search wiki</label><input id="wiki-search" type="search" data-wiki-search placeholder="Titles, content, and tags" autocomplete="off">
+    <nav class="wiki-page-list" aria-label="Wiki pages" hidden><ul data-wiki-page-list>
+      {% for page in project.wiki_pages|sort(attribute='title') %}<li><button class="wiki-link" type="button" data-wiki-page-id="{{ page.id }}">{{ page.title }}</button><template data-wiki-page="{{ page.id }}" data-title="{{ page.title }}" data-aliases="{{ page.aliases|join(', ') }}" data-body-json='{{ page.body|tojson }}' data-tags="{{ page.tags|join(', ') }}" data-provenance='{{ page.provenance_dict()|tojson }}' data-world='{{ world_page_data[page.id|string]|tojson }}' data-page-hash="{{ wiki_page_hashes[page.id|string] }}" data-source-hash="{{ wiki_source_hash }}"></template>{% for revision in page.revisions %}<template data-wiki-revision="{{ page.id }}" data-revision-id="{{ revision.id }}" data-title="{{ revision.title }}" data-aliases="{{ revision.aliases|join(', ') }}" data-body-json='{{ revision.body|tojson }}' data-tags="{{ revision.tags|join(', ') }}" data-saved-at="{{ revision.saved_at }}" data-world='{{ world_revision_data[revision.id|string]|tojson }}'></template>{% endfor %}</li>{% endfor %}
+    </ul><p class="muted" data-wiki-no-results hidden>No matching pages.</p><p class="muted" data-wiki-empty hidden>No wiki pages yet. Create the first page.</p></nav>
+    <section class="wiki-current-page" data-wiki-current-page aria-live="polite"><p class="muted">Choose a page or create one.</p></section>
+    <section class="wiki-page-editor" data-wiki-page-editor hidden></section>
+    <form method="post" action="{{ url_for('wiki.create_page') }}" data-wiki-create-form hidden><input type="hidden" name="title"></form>
+    </div>
+    {% include "workspace_tips.html" %}
+  </aside>
+</main>
+{% include '_dictate_draft.html' %}
+{% include '_ocr_import.html' %}
+<aside class="dictation-status" data-dictation-status role="status" aria-live="polite" hidden>
+  <span data-dictation-message></span>
+  <button type="button" data-dictation-stop hidden>Stop recording</button>
+  <button type="button" data-dictation-cancel>Cancel</button>
+</aside>
+<aside class="dictation-review" data-dictation-review hidden aria-label="Retained dictation transcript">
+  <p data-dictation-review-message></p><label>Transcript<textarea data-dictation-transcript rows="4" readonly></textarea></label>
+  <p class="muted">Copy this transcript if you want to keep it, or click where you want the words and choose Insert here.</p>
+  <button type="button" data-dictation-insert>Insert here</button><button type="button" data-dictation-dismiss>Dismiss</button>
+</aside>
+<dialog class="file-dialog ai-models-dialog" id="ai-models-dialog" aria-labelledby="ai-models-title">
+  <div class="file-dialog-heading"><h2 id="ai-models-title">AI Models</h2><button type="button" data-ai-models-close aria-label="Close AI Models">×</button></div>
+  <div class="ai-models-body">
+    <nav class="ai-capability-tabs" aria-label="AI capability"><button type="button" data-ai-tab="tts" aria-pressed="true">Text-to-speech</button><button type="button" data-ai-tab="stt" aria-pressed="false">Speech-to-text</button><button type="button" data-ai-tab="llm" aria-pressed="false">LLM</button><button type="button" data-ai-tab="ocr" aria-pressed="false">OCR</button></nav>
+    <section data-ai-panel="ocr" hidden>
+      <form data-ai-ocr-form>
+        <label>OCR engine<select name="provider"><option value="olmocr">olmOCR 2 · recommended local</option><option value="paddleocr">PaddleOCR-VL-1.6 · experimental local alternative</option><option value="mistral">Mistral OCR · online</option><option value="azure">Azure Document Intelligence Read · online</option><option value="google">Google Cloud Vision document OCR · online</option></select></label>
+        <p class="ai-remote-disclosure" data-ocr-model-disclosure></p>
+        <div data-ocr-model-local>
+        <label>Installed local model directory<input name="model_path" autocomplete="off" placeholder="Choose the folder containing your downloaded OCR model"></label>
+        <p class="muted" data-ocr-model-directory hidden></p>
+        <label>Device<select name="device"><option value="cuda">CUDA GPU</option><option value="cpu">CPU (slow)</option></select></label>
+        <aside class="ai-model-download"><p>Download from Hugging Face: about 17 GB for olmOCR 2 or 2 GB for PaddleOCR-VL-1.6.</p><button type="button" data-ocr-model-download>Download selected OCR model</button></aside>
+        </div>
+        <div data-ocr-model-online hidden>
+          <label>OCR endpoint<input name="endpoint" type="url" autocomplete="off" placeholder="Azure: https://YOUR-RESOURCE.cognitiveservices.azure.com"></label>
+          <label>Model<input name="model" autocomplete="off"></label>
+          <label>API key<input name="token" type="password" autocomplete="new-password" placeholder="Leave blank to retain this endpoint's saved key"></label>
+          <p data-ocr-model-key-status></p>
+          <label><input name="forget_token" type="checkbox"> Forget saved API key</label>
+          <label><input name="remote_consent" type="checkbox"> I allow manuscript images to leave my computer and go to this OCR endpoint, outside Verwrity's control.</label>
+          <p data-ocr-model-help></p>
+        </div>
+        <p data-ocr-model-readiness role="status"></p>
+        <details><summary>Sample JPEG / expected text</summary><img src="{{ url_for('ocr.sample') }}" alt="OCR test: Verwrity OCR test. The quick brown fox jumps over the lazy dog. Page 123." style="max-width:100%"></details>
+        <p data-ocr-model-status role="status" aria-live="polite"></p>
+        <pre data-ocr-model-result style="white-space:pre-wrap;max-height:220px;overflow:auto"></pre>
+        <div class="app-dialog-actions"><button type="button" data-ocr-model-test>Test OCR with sample JPEG</button><button type="button" data-ocr-model-cancel hidden disabled>Cancel test</button><button type="submit">Save OCR settings</button></div>
+      </form>
+    </section>
+    <section data-ai-panel="tts">
+      <form data-ai-tts-form>
+        <label>Provider<select name="provider" data-ai-provider><option value="kokoro_local">Kokoro (local, CPU or CUDA)</option><option value="google_cloud_tts" data-remote="true">Google Cloud TTS (remote, API key)</option><option value="edge_tts" data-remote="true">Microsoft Edge TTS (remote, no API key)</option></select></label>
+        <p class="ai-remote-disclosure" data-provider-disclosure></p>
+        <div data-ai-local-fields>
+          <aside class="ai-model-download" data-kokoro-download-offer hidden>
+            <p>Download Kokoro files from GitHub (about 338 MiB), or enter your existing file paths below.</p>
+            <div class="app-dialog-actions"><button type="button" data-kokoro-download>Download Kokoro files</button></div>
+          </aside>
+          <p data-kokoro-download-status role="status" aria-live="polite"></p>
+          <label>Model file path<input name="model_path" type="text" placeholder="/path/to/kokoro-v1.0.onnx" autocomplete="off"></label>
+          <label>Voice file path<input name="voices_path" type="text" placeholder="/path/to/voices-v1.0.bin" autocomplete="off"></label>
+          <label>Compute device<select name="device"><option value="cpu">CPU</option><option value="cuda">GPU (CUDA)</option></select></label>
+          <label>Voice<input name="voice" value="af_sarah" autocomplete="off"></label>
+        </div>
+        <div data-ai-remote-fields hidden>
+          <div data-google-key-fields>
+            <label>Google Cloud API key<input name="google_api_key" type="password" autocomplete="new-password"></label>
+            <label class="ai-consent"><input name="forget_google_api_key" type="checkbox"> Remove the saved Google API key</label>
+          </div>
+          <div data-google-voice-fields hidden><label>Google voice<input name="google_voice" value="en-US-Standard-C" autocomplete="off"></label></div>
+          <div data-edge-fields hidden><label>Edge voice<input name="edge_voice" value="en-US-AriaNeural" autocomplete="off"></label></div>
+          <label class="ai-consent"><input name="remote_consent" type="checkbox"> <span data-provider-consent-label>I understand that selecting and saving this remote model sends manuscript text over the internet when I use it. This choice is saved in AI Models.</span></label>
+        </div>
+        <label>Speaking speed <span data-ai-speed-value>1.0</span><input name="speed" type="range" min="0.5" max="2" step="0.1" value="1"></label>
+        <p data-ai-settings-status role="status" aria-live="polite"></p>
+        <div class="app-dialog-actions"><button type="submit">Save text-to-speech settings</button></div>
+      </form>
+    </section>
+    <section data-ai-panel="stt" hidden>
+      <form data-ai-stt-form>
+        <label>Provider<select name="provider" data-stt-provider></select></label>
+        <p class="ai-remote-disclosure" data-stt-disclosure></p>
+        <div data-stt-local-fields>
+          <label>Model folder<input name="model_path" autocomplete="off" placeholder="Folder containing model.bin and tokenizer.json"></label>
+          <p class="muted" id="stt-model-folder-help" data-stt-model-folder-help hidden></p>
+          <div class="settings-field-pair"><label>Compute device<select name="device"><option value="cpu">CPU</option><option value="cuda">GPU (CUDA)</option></select></label>
+          <label>Compute type<select name="compute_type"><option value="int8">int8 (CPU default)</option><option value="default">Device default</option><option value="float16">float16 (CUDA)</option><option value="float32">float32</option></select></label></div>
+          <aside class="ai-model-download">
+            <p>Download from Hugging Face: base English is about 150 MB; larger models need more space.</p>
+            <label>Download model<select data-stt-download-model><option value="tiny.en">Tiny English (about 75 MB)</option><option value="base.en" selected>Base English (about 150 MB)</option><option value="small.en">Small English (about 500 MB)</option><option value="tiny">Tiny multilingual</option><option value="base">Base multilingual</option><option value="small">Small multilingual</option><option value="medium">Medium multilingual</option><option value="large-v3">Large v3 multilingual</option></select></label>
+            <button type="button" data-stt-download>Download selected Whisper model</button>
+          </aside>
+        </div>
+        <div data-stt-api-fields hidden>
+          <label>Service preset<select data-stt-preset><option value="custom">Custom compatible endpoint</option><option value="local">Local transcription server (key depends on server)</option><option value="openai">OpenAI (paid; API key required)</option><option value="groq">Groq Whisper (free tier / paid; API key required)</option></select></label>
+          <label>API base URL<input name="endpoint" autocomplete="url" placeholder="http://localhost:8080/v1"></label>
+          <label>Model name<input name="model" maxlength="256" autocomplete="off"></label>
+          <label><span data-stt-token-label>API key / token (required for OpenAI and Groq, including Groq's free tier)</span><input name="token" type="password" autocomplete="new-password" aria-describedby="stt-token-help"></label>
+          <p class="muted" id="stt-token-help" data-stt-token-help></p>
+          <label class="ai-consent"><input name="forget_token" type="checkbox"> Remove saved token</label>
+          <label class="ai-consent" data-stt-consent-row><input name="remote_consent" type="checkbox"> I consent to my recorded audio being sent over the internet to this endpoint when I use dictation. This choice is saved for this exact URL.</label>
+        </div>
+        <div class="settings-field-pair"><label>Language<select name="language"><option value="">Automatic detection</option></select></label>
+        <label>Dictation key<select name="shortcut"><option value="ControlRight">Right Ctrl</option><option value="AltRight">Right Alt</option><option value="ShiftRight">Right Shift</option><option value="F8">F8</option><option value="F9">F9</option><option value="F10">F10</option><option value="">Disabled</option></select></label></div>
+        <p data-stt-settings-status role="status" aria-live="polite"></p>
+        <div class="app-dialog-actions"><button type="submit">Save speech-to-text settings</button></div>
+      </form>
+    </section>
+    <section data-ai-panel="llm" hidden>
+      <p>Choose the API format your server supports and its address, for example <code>http://localhost:port</code>.</p>
+      <form data-ai-llm-form>
+        <label>API standard<select name="standard" data-llm-standard><option value="openai_compatible">OpenAI-compatible</option><option value="anthropic">Anthropic Messages</option><option value="google">Google Gemini</option></select></label>
+        <label>API base URL<input name="endpoint" type="url" required autocomplete="url" placeholder="http://localhost:port"></label>
+        <label>Model name<input name="model" type="text" maxlength="256" required autocomplete="off" placeholder="Model name expected by the endpoint"></label>
+        <label>API token (optional for local servers)<input name="token" type="password" autocomplete="new-password" placeholder="No token needed for many local servers"></label>
+        <p class="muted">Your saved token belongs to this API format and server address. Change either and you'll need to enter the token again.</p>
+        <label class="ai-consent"><input name="forget_token" type="checkbox"> Remove the saved API token</label>
+        <p class="ai-remote-disclosure" data-llm-disclosure></p>
+        <label class="ai-consent" data-llm-consent-row><input name="remote_consent" type="checkbox"> <span data-llm-consent-label>I understand that questions and manuscript tasks send project text to this online provider.</span></label>
+        <p data-llm-settings-status role="status" aria-live="polite"></p>
+        <div class="app-dialog-actions"><button type="submit">Save LLM settings</button></div>
+      </form>
+    </section>
+  </div>
+</dialog>
+<dialog class="file-dialog scene-diff-dialog" id="scene-diff-dialog" aria-labelledby="scene-diff-title">
+  <div class="file-dialog-heading"><h2 id="scene-diff-title">Compare scene revisions</h2><button type="button" data-close-scene-diff aria-label="Close comparison">×</button></div>
+  <label class="scene-diff-wrap"><input type="checkbox" data-diff-wrap> Wrap lines</label>
+  <p class="scene-diff-labels"><strong data-diff-left-title></strong><span>↔</span><strong data-diff-right-title></strong></p>
+  <p class="muted scene-diff-note" data-diff-note hidden></p>
+  <div class="scene-diff-panes" data-scene-diff-output></div>
+</dialog>
+{% include "scene_metadata_dialog.html" %}
+{% include "dialogue_dialogs.html" %}
+{% include "_world_workspace.html" %}
+<div class="wiki-selection-menu" data-wiki-selection-menu role="dialog" aria-label="Manuscript word actions" hidden>
+  <button type="button" data-selection-question-context disabled>Use as context in Ask LLM</button>
+  <button type="button" data-suggest-alternatives disabled title="Ask your configured LLM for alternative wording, using the selected words and nearby sentences">Suggest alternatives</button>
+  <button type="button" data-word-dictionary>Word lists…</button>
+  <div class="context-actions"><form method="post" action="{{ url_for('wiki.create_page') }}"><input type="hidden" name="title"><button type="submit" data-create-wiki>Create wiki article</button></form><button type="button" data-add-comment>Add comment</button><button type="button" data-assign-speaker>Label speaker</button><button type="button" data-close-context aria-label="Close word actions">×</button></div>
+  <section data-thesaurus hidden>
+    <strong>Thesaurus</strong>
+    <form class="thesaurus-lookup"><label for="thesaurus-word">Word or phrase</label><input id="thesaurus-word" maxlength="80" required autocomplete="off"><button type="submit">Look up</button></form>
+    <p class="muted" data-thesaurus-status role="status" aria-live="polite"></p>
+    <div data-thesaurus-results></div>
+    <p class="muted thesaurus-source">Offline English · WordNet.</p>
+  </section>
+</div>
+<dialog id="scene-comments-dialog" class="file-dialog" aria-labelledby="scene-comments-title"><div class="file-dialog-heading"><h2 id="scene-comments-title">Scene comments</h2><button type="button" data-close-comments aria-label="Close comments">×</button></div><div class="scene-dialog-body"><p class="muted">Detached comments keep their original passage. To reattach one, select a passage in the manuscript before opening this list.</p><p data-comments-error role="status"></p><div data-comments-list></div></div></dialog>
+<dialog id="add-comment-dialog" class="file-dialog"><form data-comment-form><div class="file-dialog-heading"><h2>Add comment</h2><button type="button" data-close-comment aria-label="Close">×</button></div><div class="scene-dialog-body"><label for="manuscript-comment-body">Comment</label><textarea id="manuscript-comment-body" name="body" rows="4" maxlength="5000" required></textarea><label for="manuscript-comment-todo">Add to TODO wiki page</label><input id="manuscript-comment-todo" name="add_to_todo" type="checkbox"><p class="muted" data-comment-error hidden></p><button type="submit">Add comment</button></div></form></dialog>
+<aside class="comment-popover" data-comment-popover hidden role="dialog" aria-live="polite"><blockquote data-comment-quote></blockquote><p data-comment-body></p><div><button type="button" data-comment-resolve>Resolve</button><button type="button" data-comment-delete>Delete</button></div></aside>
+<dialog id="add-scene-dialog" class="file-dialog"><form method="post" action="{{ url_for('scenes.add_scene') }}"><div class="file-dialog-heading"><h2>Add scene</h2><button type="button" data-close-add-scene aria-label="Close">×</button></div><div class="scene-dialog-body"><label for="scene-title">Scene title</label><input id="scene-title" name="scene_title" required><label for="scene-summary">Description</label><textarea id="scene-summary" name="scene_summary" rows="3" placeholder="What happens in this scene?"></textarea><button type="submit">Add scene</button></div></form></dialog>
+{% if show_start_dialog %}<dialog id="start-dialog" class="file-dialog" data-start-dialog><div class="file-dialog-heading"><h2>Open a project</h2></div><div class="start-dialog-body"><p>Choose a saved project to continue, or start a new one.</p><form method="post" action="{{ url_for('projects.library_open_project') }}"><label for="start-project-library">Open saved project</label><select id="start-project-library" name="project_filename" required><option value="">Choose a project</option>{% for filename in library_projects %}<option value="{{ filename }}">{{ filename.removesuffix(".verwrity.zip") }}</option>{% endfor %}</select><button type="submit">Open</button></form>{% if recovery_projects %}<form method="post" action="{{ url_for('projects.open_recovery_project') }}"><label for="start-recovery-project">Recover a project draft</label><select id="start-recovery-project" name="project_id" required>{% for draft in recovery_projects %}<option value="{{ draft.project.project_id }}">{{ draft.project.title }}</option>{% endfor %}</select><button type="submit">Review recovery</button></form>{% endif %}<form method="post" action="{{ url_for('projects.new_project') }}"><button type="submit">New project</button></form></div></dialog>{% endif %}
+{% if recovery %}<dialog class="file-dialog" data-recovery-dialog aria-labelledby="recovery-dialog-title"><div class="file-dialog-heading"><h2 id="recovery-dialog-title">Recover autosaved project?</h2></div><div class="start-dialog-body"><p>An autosaved draft of <strong>{{ recovery.project_title }}</strong> is available.{% if recovery.saved_filename %} The named project <strong>{{ recovery.saved_title }}</strong> is also saved in the library.{% else %} This draft has no matching named project in the library.{% endif %}</p><form method="post" action="{{ url_for('projects.continue_recovered_project') }}"><button type="submit">Continue recovered draft</button></form><form method="post" action="{{ url_for('projects.discard_recovered_project') }}"><input type="hidden" name="saved_project_filename" value="{{ recovery.saved_filename }}"><button type="submit">{% if recovery.saved_filename %}Open named project instead{% else %}Discard draft and start blank{% endif %}</button></form></div></dialog>{% endif %}
+<script type="module" src="{{ url_for('static', filename='wiki.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='dialogue.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='scene-structure.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='manuscript-comments.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='thesaurus.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='scene-revisions.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='manuscript-find.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% block title %}Help · Verwrity{% endblock %}
+{% block body %}
+<header class="toolbar help-toolbar">
+  <h1>Verwrity</h1>
+  <span class="project-name">Help with Verwrity</span>
+  <a class="panel-toggle toolbar-link" href="{{ url_for('workspace.index') }}">Back to your story</a>
+  <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle dark mode"><span data-theme-icon aria-hidden="true">☾</span> <span data-theme-label>Dark mode</span></button>
+</header>
+<main class="help-page">
+  <details class="help-contents">
+    <summary>Help topics</summary>
+    <nav aria-label="Help topics">
+      <a href="#getting-started">Getting started</a><a href="#storyboard">Storyboard</a><a href="#manuscript">Manuscript</a>
+      <a href="#find-replace">Find and replace</a>
+      <a href="#focus">Focus and layout</a><a href="#wiki">Wiki</a>
+      <a href="#scene-metadata">Scene metadata</a><a href="#comments">Comments</a>
+      <a href="#revisions">Revisions</a><a href="#analysis">Analysis</a>
+      <a href="#dialogue">Dialogue and speakers</a><a href="#scene-structure">Split and join scenes</a>
+      <a href="#wiki-ai">Wiki AI and author control</a>
+      <a href="#dictionaries">Spelling dictionaries</a><a href="#ai-models">AI setup</a>
+      <a href="#questions">Project questions</a><a href="#tasks">Manuscript tools</a>
+      <a href="#read-aloud">Read aloud</a><a href="#dictation">Quick dictation</a><a href="#dictate-draft">Dictate draft and audio imports</a>
+      <a href="#ocr-import">Import written pages with OCR</a><a href="#speed-reader">Speed reader</a><a href="#project-words">Project words</a>
+      <a href="#projects">Projects</a><a href="#recovery">Saving and recovery</a>
+      <a href="#project-features">Optional project tools</a><a href="#world-authoring">Maps and game records</a>
+      <a href="#fingal-transfer">Fingal story transfers</a>
+      <a href="#privacy">Privacy and portability</a><a href="#shortcuts">Keyboard shortcuts</a>
+      <a href="#troubleshooting">Troubleshooting</a><a href="#getting-started">Hints and tips</a>
+      <a href="#project-features">What is available today</a>
+      <a href="#support">Support my work</a>
+    </nav>
+  </details>
+
+  <section class="help-section">
+    <h2>Main features</h2>
+    <div class="help-principles">
+      <article><h3>It's all your own work</h3><p>Your manuscript is your writing. Verwrity's optional AI tools will never write any text for you.</p></article>
+      <article><h3>Keep your story notes here</h3><p>Use the wiki for characters, places, items, plans, secrets, TODO lists, you name it. It's your world-building engine.</p></article>
+      <article><h3>Tool suggestions are only suggestions</h3><p>Optional AI analysis can point to possible problems. You always get to choose what to do about it.</p></article>
+    </div>
+  </section>
+
+  <section class="help-section">
+    <h2>Feature guides</h2>
+    <div class="help-guides">
+      <article id="getting-started" tabindex="-1">
+        <h3>Getting started</h3>
+        <ol><li>Choose a saved project or <strong>New project</strong> in the opening dialog. Your first scene will be created for you with the default title "Scene 1".</li><li>You write your story <strong>Manuscript Editor</strong> (centre panel). Add more scenes using the <strong>Storyboard</strong> (left panel).</li><li id="scene-metadata" tabindex="-1">Keep planning notes in the <strong>Wiki</strong> (right panel) or <strong>Scene metadata</strong> (available from the <strong>Manuscript Editor</strong>'s menus, or from the storyboard view).</li><li>Use the <strong>Save</strong> button or <strong>Ctrl+S</strong> to save your project to the library. There's a draft recovery system that automatically, but you should still save often. You can export a portable copy of your project for a backup elsewhere.</li></ol>
+        <p>You can plan your story, organise your scenes, write, use the wiki, add comments and notes, and check spelling without configuring an AI. You can choose to set up the optional AI tools later, when you're ready to try them.</p>
+      </article>
+      <article id="storyboard" tabindex="-1">
+        <h3>Storyboard</h3>
+        <p>Choose <strong>Go to Storyboard</strong> for two different storyboarding views: Sticky notes or a story grid. On the Sticky notes view, your story flows from left to right, then top to bottom. Add scenes, move them around, and edit their names and descriptions (and other metadata such as the point of view character) using the Sticky notes board.</p>
+        <p>In the grid, you can add columns for character arcs, relationships, clues, or whatever other details you want to track.</p>
+        <p>Removed scenes go into a scene <strong>History</strong>, where you can still read or restore them. You can then choose to permanently delete them from there.</p>
+      </article>
+      <article id="manuscript" tabindex="-1">
+        <h3>Manuscript</h3>
+        <p>The idea is that write a scene at a time in the central editor. This could be chapters or smaller scenes depending on how you like to work. The scene list in the <strong>Storyboard</strong> determines the order of scenes in your manuscript.</p>
+        <p>Your work is saved as plain text. The page layout and highlight options etc. only change how it looks on screen.</p>
+        <p>You can choose to view your seen as continuous text or separated into pages, with single pages or two-page spreads, and A4, Letter, 6 × 9, or 5.5 × 8.5 paper. You can also use the <strong>View</strong> menu to change typeface, size, and colours. All these options only choose how the text is displayed, your file is always just plain text - Verwrity is not a publishing layout tool.</p>
+        <p>Word counts are shown for the current page, the scene, and the whole manuscript. The text map shows the shape of the current scene's paragraphs which can help you find your way around in a large scene. As usual, these aren't stored in your text file, they're just for display.</p>
+        <p>You can use the toolbar's <strong>theme</strong> button to switch between light and dark mode for a more comfortable experience.</p>
+      </article>
+      <article id="find-replace" tabindex="-1">
+        <h3>Find and replace</h3>
+        <p>Choose <strong>Find</strong> or press <strong>Ctrl+F</strong> (<strong>Cmd+F</strong> on Mac) while writing. The main difference from Find & Replace features you're familiar with is that you can choose to affect the current scene or the whole manuscript. (Note that at present a global find and replace doesn't affect the <strong>Wiki</strong>)</p>
+      </article>
+      <article id="focus" tabindex="-1">
+        <h3>Focus and layout options</h3>
+        <p>If you want a distraction-free writing experience, you can choose <strong>Focus → Focus Mode</strong>.</p>
+        <p><strong>Typewriter Mode</strong> is an even more extreme focus that stops you being able to revise by blocking movements of the cursor. It's for hardcore drafting! If you need to, you can <strong>Unlock caret</strong> to temporarily allow repositioning and undo/redo. If, like me, you tend to over-revise while writing your first drafts, maybe you should give this mode a try!</p>
+        <p>You can exit a focus mode using the <strong>Workspace</strong> button. You can also choose to show the manuscript controls if you want a view that's less cluttered than the full editor, but more functional than the full focus mode.</p>
+        <p>There's also a <strong>Layout</strong> menu you can use to show/hide particular parts of the UI, which can be really useful if you're on a very small screen.</p>
+      </article>
+      <article id="wiki" tabindex="-1">
+        <h3>Wiki</h3>
+        <p>Choose <strong>+ New page</strong>, enter a title, and write your notes. <strong>Edit page</strong> lets you change the title, alternative titles, tags, and content; choose <strong>Save page</strong> to keep edits or <strong>Cancel edit</strong> to abandon them. Separate tags and alternative titles with commas. Titles and aliases must be unique across the wiki.</p>
+        <p>Use <code>[[Page title]]</code> to link another page, or <code>[[Page title|visible label]]</code> for different wording. Aliases resolve to the same page. Backlinks show which current pages link here; an unresolved link offers to create its missing page. Titles and aliases can also be clicked in the manuscript to open their page.</p>
+        <p>Content supports headings with <code>#</code>, <code>##</code>, or <code>###</code>, lists, blockquotes, bold, emphasis, inline code, and web links. <strong>Insert form → Character profile</strong> appends prompts to existing notes; save the page afterwards.</p>
+        <p><strong>Search wiki</strong> finds titles, aliases, tags, and body text, not manuscript prose or old page versions.</p>
+        <p>You can also select manuscript text and use its context menu to create a wiki page with that title. The new page starts blank: your selected prose isn't copied into wiki knowledge or changed.</p>
+        <p>Page history keeps up to 100 earlier versions. Restoring one preserves the version you replace. Renaming updates explicit links in other wiki pages; it doesn't rewrite manuscript names.</p>
+        <p><strong>Delete page</strong> removes the page and its history; inbound wiki links will remain in the manuscript as unresolved links.</p>
+        <p>Blue text inside dotted boxes may be maintained by AI; human text is protected. Editing AI text 'adopts' only that paragraph. Press <strong>Enter</strong> at the end of an AI block, or choose <strong>Add human paragraph</strong>, to write separately. Select text and choose <strong>Mark as AI maintained</strong> to enable AI editing of that section, or <strong>Mark as human owned / protected</strong> to revoke that permission. <strong>AI maintained</strong> means originally human-written with update permission, while <strong>AI text</strong> means generated text. Updates run only when you explicitly request them. The AI can write wiki content for you, not manuscript content.</p>
+        <p>While editing, expand <strong>Instruct the LLM</strong> to type or dictate a free-form instruction. Choose page-only context, the current scene, surrounding-scene percentages, or the whole manuscript. <strong>Run instruction</strong> saves your edits first. AI sections can change directly; human sections receive highlighted suggestions with exact replacement text. <strong>Accept suggestion</strong> makes the replacement AI-generated and keeps the original in <strong>History</strong>. Use <strong>Mark as human owned / protected</strong> to reclaim control.</p>
+      </article>
+      <article id="comments" tabindex="-1">
+        <h3>Comments</h3>
+        <p>To add a comment, select text in the manuscript and choose <strong>Add comment</strong> from the context menu. Choosing the <strong>TODO</strong> option there also copies the note to a special <strong>TODO</strong> wiki page. <strong>Analysis → Comments</strong> toggles highlighting of commented passages, and opening a comment lets you resolve or delete it.</p>
+        <p>The style and colour controls next to <strong>Comments</strong> let you set how the highligh looks.</p>
+        <p>If you delete a commented passage, its comment is detached rather than lost, with the original quotation and surrounding text stored alongside it.</p>
+        <p><strong>Analysis → Comments ⋯ → Review comments</strong> lets you see a list of comments, including detached ones. To reattach a comment, select the new passage, open <strong>Review comments</strong> and choose <strong>Attach to selected passage</strong>.</p>
+      </article>
+      <article id="revisions" tabindex="-1">
+        <h3>Revisions</h3>
+        <p>The current 'head' is the latest version of the scene you're editing. Choose <strong>Versions → Record Revision</strong> to make a checkpoint revision.</p>
+        <p>You can select an earlier revision to read it, and you can select <strong>Compare</strong> to see a side-by-side comparison between two revisions. To resume writing without making changes, you just select the head revision.
+        <p>You can bring an earlier revision back by clicking <strong>Copy to new head</strong>. This creates a checkpoint for the current head, and makes a copy of the older revision as the new head.</p>
+        <p><strong>Wiki</strong> history is separate, it has its own history system that is not affected by the manuscript revision system.</p>
+      </article>
+      <article id="analysis" tabindex="-1">
+        <h3>Analysis modes</h3>
+        <p>There are a lot of 'analysis modes', and they're growing all the time as I think of new things to add.</p>
+        <p>Analysis modes check your spelling, show or hide wiki links and comment marks, and provide a lot of optional AI scene reviews.</p>
+        <p>The <strong>Cliché Detector</strong> flags potentially tired expressions.</p>
+        <p>The <strong>Usage Detector</strong> offers suggestions based on English usage guides.</p>
+        <p>The <strong>Grammar Checker</strong> looks for grammar and punctuation problems.</p>
+        <p>The <strong>Super Thesaurus</strong> highlights possible weak or generic word choices and recommends alternatives.</p>
+        <p>The <strong>Tense Checker</strong> flags apparently unintended narrative tense changes.</p>
+        <p>The <strong>Dialogue Speakers</strong> mode attempts to guess which character said each piece of dialogue in the current scene (see Dialogue and Speakers, below).</p>
+        <p>You'll need to configure an LLM in <a href="#ai-models"><strong>AI Models</strong></a> first, then you have to turn on an analysis mode in the menu to activate it.</p>
+        <p>When you enable an analysis mode, the analysis will run. It will stay on until you turn it off, but the analysis will be considered 'stale' when you make changes to the scene. You can click <strong>re-run analysis</strong> to freshen it up. The reason the analysis modes don't run continuously is that there's a cost associated with AI queries and so you don't want to run them in real time.</p>
+        <p>Even spelling is handled this way - there's not really a cost reason for that because the spell checker doesn't use the LLM, but it's more consistent if it is handled that same way, and I prefer to only review spelling as a deliberate editing step. Maybe I'll make realtime spellcheck an option in a future version!</p>
+        <p>Each analysis mode has its own list of findings, colour and highlight style. If there are overlapping highlights, you will see all the feedback from all the enabled modes when you mouse over that highligh.</p>
+        <p>You can even add your own custom prompts or edit a built-in prompt.</p>
+      </article>
+      <article id="tasks" tabindex="-1">
+        <h3>Manuscript tools</h3>
+        <p>Next to the <strong>Scene Tools</strong> menu (top of the manuscript), <strong>Manuscript tools</strong> allows you to do AI analysis that covers the whole manuscript rather than just the current scene.</p>
+        <p><strong>Narrative voice consistency</strong> reviews the whole current manuscript to identify possibly unintended voice shifts.</p>
+        <p>(More manuscript tasks will be added as I develop new features)</p>
+      </article>
+      <article id="Edit menu" tabindex="-1">
+        <p>The <strong>Edit</strong> menu offers a few options to automatically change some choices in your manuscript. You can toggle between one-space or two-spaces after a full stop (period). Some of us (mostly older folks who learned to type on a typewriter!) have the habit of using two spaces after a full stop. This tool helps you correct your text either way, as you prefer.</p>
+        <p>You can mark whether a paragraph is a running paragraph or a new section - this affects paragraph indentation which is available from the <strong>View</strong> menu. When you're typing, the system will guess whether you intended for a paragraph to be run-on depending on whether you indented it when you typed it. You can view a mark that will show which paragraphs are considered new section paragraphs. If you don't indent your paragraphs at all, you can probably ignore this feature! Again, this feature is probably more for older folks who have a more traditional writing style.</p>
+      </article>
+      <article id="dialogue" tabindex="-1">
+        <h3>Dialogue and speakers</h3>
+        <p>Optionally, you can choose to associate dialogue with the character who said it. This can be useful for checking that all the dialogue for a character is spoken in their characteristic style.</p>
+        <p>To use it, select some speech, right click and select <strong>Label Speaker</strong>. Normally you should associate it with a wiki page that has the 'character' label.</p>
+        <p><strong>Scene tools → Review Scene Dialogue</strong> lets you check your dialogue labels for the scene.</p>
+        <p>You can ask the AI to automatically label speakers using the <strong>Analysis → Dialogue Speakers</strong> mode. It will attempt to guess which character said each piece of dialogue in the current scene.</p>
+        <p>On a character's wiki page you can run the <strong>Dialogue</strong> action to view all of that character's dialogue in one place. <strong>Evaluate this voice (AI)</strong> reviews the dialogue for you to check for consistency and give advice (of course, it will not write into your manuscript, ever!).</p>
+      </article>
+      <article id="scene-structure" tabindex="-1">
+        <h3>Split and join scenes</h3>
+        <p>The <strong>Scene tools</strong> menu lets you <strong>Split</strong> and <strong>Join</strong> scenes.</p>
+        <p><strong>Split at caret / selection start</strong> keeps everything before your current position in the current scene, and creates a new scene immediately after it with everything after the caret. You get to review the new scene's title and description before you <strong>Apply</strong> the structural edit.</p>
+        <p><strong>Join with next scene</strong> joins the current scene and the next scene, keeps the current scene's identity, metadata, and storyboard fields. You get to review the resulting title and description before you <strong>Apply</strong> the change.</p>
+      </article>
+      <article id="wiki-ai" tabindex="-1">
+        <h3>Wiki AI, and author control</h3>
+        <p>The AI is allowed to write in the <strong>Wiki</strong> (the idea being that you could ask the AI to keep some of your wiki information up to date with manuscript changes to save you effort)</p>
+        <p>Everything you write is protected from AI changes by default, so the wiki is divided into paragraphs, some 'human' and some 'AI'.</p>
+        <p>You can 'grant' the AI permission to manage a human-written paragraph (after which it will be allowed to make changes to that paragraph), and you can 'adopt' an AI paragraph so that it becomes protected just like if you wrote it. When you make manual changes to an AI paragraph, you automatically 'adopt' it.</p>
+        <p>Use the <strong>Instruct the LLM</strong> option to tell it to do something. The AI is only allowed to modify 'AI paragraphs' in the wiki page and to add new AI paragraphs, it can't make changes to paragraphs you wrote without permission. But this can be a good way to auto-update wiki pages when you have written more of your manuscript.  Of course, you should always check its output for accuracy.</p>
+      </article>
+      <article id="dictionaries" tabindex="-1">
+        <h3>Spelling dictionaries</h3>
+        <p>You can right-click a word in your manuscript to bring up an offline English thesaurus. You have to expand a 'sense' to see synonyms.</p>
+        <p>Turn on <strong>Spelling</strong> in <strong>Analysis</strong> to check spelling in the current scene. It works like the other analysis modes, so you have to manually refresh the analysis using the UI button to get fresh spell checking.</p>
+        <p>Adding your story words (names and places, neologisms etc.) to the <strong>Project Words</strong> list (in <strong>Settings → Word lists</strong>) means those words won't be identified as spelling errors, and provides those words to the LLM when you do things like dictation, which helps with accuracy.</p>
+      </article>
+      <article id="ai-models" tabindex="-1">
+        <h3>AI setup</h3>
+        <p>Open <strong>Settings → AI Models</strong> and choose <strong>LLM</strong>, <strong>Text-to-speech</strong>, <strong>Speech-to-text</strong>, or <strong>OCR</strong>. Save the settings for each capability you want to use.</p>
+        <p>Unlike the other types of AI model, Verwrity doesn't run its own LLM. If you want to use a local LLM you need to run something like llamacpp, vLLM, ollama, LMStudio or koboldcpp. Personally I like koboldcpp, because it's easy to use. I use gemma4-26b at the moment and I find it works really well.</p>
+        <p>For an LLM, choose your server's API standard: <strong>OpenAI-compatible</strong>, <strong>Anthropic Messages</strong>, or <strong>Google Gemini</strong>. Enter its API base URL, model name, and any required token. A local OpenAI-compatible server such as llama.cpp will use a URL like <code>http://localhost:8081/v1</code>. Use the actual port number and model name of your running server.</p>
+        <p>Remote LLM and transcription services require HTTPS and consent for the exact endpoint. Changing the LLM endpoint or API standard clears its saved token. Local loopback servers can use HTTP and may need no token. A free account or free tier can still require a key: OpenAI and Groq transcription presets require one.</p>
+        <p>For voice providers and local model files, see <a href="#read-aloud">Read aloud</a> and <a href="#dictation">Quick dictation</a><a href="#dictate-draft">Dictate draft and audio imports</a>
+      <a href="#ocr-import">Import written pages with OCR</a>. Check <a href="#privacy">privacy</a> to learn about what each tool sends over the internet before choosing it.</p>
+        <p>To use local models for TTS, STT and OCR, you need to install extra python libraries, check the readme for details. Verwrity can help you download the model files (check the appropriate tab on the AI setup menu).</p>
+      </article>
+      <article id="questions" tabindex="-1">
+        <h3>Project questions</h3>
+        <p>In the dock below the manuscript you can ask your LLM anything about your story. For example, “Where have I established that Mara distrusts Ivo?” </p>
+        <p>You can ask for editorial help too, such as alternative phrasing or an explanation of word choice. The model is instructed to offer optional suggestions while grounding story facts in your selected context. As always, you have to enter text into the manuscript yourself. The AI can give advice, but it will not write for you, because that's not what Verwrity is for.</p>
+        <p>You can control how much of your manuscript to include around the active scene and whether to include the wiki in the context that's passed to the LLM.</p>
+        <p>To ask about a sentence or passage, select it in the manuscript, right-click, and choose <strong>Use as context in Ask LLM</strong>.</p>
+        <p>For quick wording ideas, select one or more words and right-click → <strong>Suggest alternatives</strong>. This immediately asks your configured LLM for three to five optional phrasings with notes on tone or nuance.</p>
+        <p><strong>Hide answer</strong> collapses the AI's output. <strong>Clear</strong> removes the conversation. There's an <strong>AI highlight</strong> button above the editor you can use to hide or show it.</p>
+      </article>
+      <article id="read-aloud" tabindex="-1">
+        <h3>Read aloud</h3>
+        <p>Once you have set up a TTS model using <strong>AI Models → Text-to-speech</strong>, you can choose to listen to the scene using the <strong>Read Scene</strong> button (above the manuscript).</p>
+        <p>Hearing your manuscript read aloud by another voice can be a useful editing step. I still recommend that you read your work aloud in your own voice too!</p>
+        <p>You can also have the AI read out its answers in the <strong>ask the AI</strong> tool, and have it read out a wiki page.</p>
+      </article>
+      <article id="project-words" tabindex="-1">
+        <h3>Project words</h3>
+        <p>If you have invented names or unusual spellings in your project, you should Open <strong>Settings → Word lists</strong> to add them so that they can be shared with the spell checker, dictation cleanup and OCR text correction.</p>
+        <p><strong>Scan saved manuscript</strong> checks the manuscript for unfamiliar words and suggests them for adding to the project words list.</p>
+        <p><strong>Create wiki pages and add selected words</strong> creates empty wiki pages if there's no existing wiki page for those words.</p>
+      </article>
+      <article id="dictation" tabindex="-1">
+        <h3>Quick dictation</h3>
+        <p>Set up <strong>AI Models → Speech-to-text</strong> first. I find Faster Whisper does a great job offline even only using your CPU, it's fast and accurate.</p>
+        <p>In most places you can hold <strong>Right Ctrl</strong> while you speak and release it to transcribe your voice into the manuscript, wiki page etc. You can double-press <strong>right-control</strong> to latch recording on, then press it again to stop. You can alternatively click the microphone button on the UI. Inline transcription works for voice snippets up to five minutes long.</p>
+        <p>You'll need to allow microphone access in your browser.</p>
+        <p>For a long recording or a phone voice note, use <a href="#dictate-draft"><strong>Dictate draft</strong></a>. To transcribe photos or video of written or typed paper drafts, use <a href="#ocr-import"><strong>OCR import</strong></a>.</p>
+      </article>
+      <article id="dictate-draft" tabindex="-1">
+        <h3>Dictate draft and audio imports</h3>
+        <p>Open <strong>Scene tools → Dictate draft</strong> when you want to read a longer piece aloud or import an audio file such as a voice note from your phone.</p>
+        <p>Choose a manuscript cursor position first. Check the speech-to-text and cleanup providers, then choose <strong>Start recording</strong>, <strong>Pause recording</strong>, <strong>Resume recording</strong> or <strong>Finish recording</strong> as needed.</p>
+        <p><strong>Import audio file</strong> accepts WAV, MP3, M4A/MP4, AAC, FLAC, Ogg/Opus, WebM, AIFF, WMA, AMR and 3GP, up to 24 MiB per file. Longer recordings are split automatically so there's no duration limit.</p>
+        <p>The recording is split into sections at quiet points or after about 45 seconds, and transcription is done in chunks.</p>
+        <p>When you have a result, you can choose to keep the raw transcript or ask an LLM to clean it up. Cleanup tries to recover plausible spoken wording from imperfect recognition, including punctuation, paragraphing and small mishearings.</p>
+        <p>The LLM cleanup will use your <a href="#project-words"><strong>Project words</strong></a> to help with names and unusual terms.</p>
+        <p>Choose <strong>Keep raw</strong> or <strong>Use reviewed cleanup</strong> for each chunk. <strong>Auto-approve all</strong> uses completed cleanup where available, otherwise raw text.</p>
+        <p><strong>Insert approved sections</strong> inserts the transcribed text at the current caret position. Use <strong>Hide dialog to choose manuscript caret location</strong> if you want another destination, then reopen the panel.</p>
+        <p>The confirmation dialog has <strong>Clear recordings</strong> checked by default. After a successful insertion, it clears this dictation's audio, transcripts and review text, including unapproved sections. Uncheck it if you want to keep the buffer.</p>
+      </article>
+      <article id="ocr-import" tabindex="-1">
+        <h3>Import written pages with OCR</h3>
+        <p>Open <strong>Scene tools → Import manuscript pages (OCR)</strong> to turn photos or a video of written pages into text you can review. First choose a local model or online provider in <strong>AI Models → OCR</strong>.
+        <p>olmOCR 2 is the local default. In my testing it took roughly 30 seconds a page once and the results on type-written material were good. CPU inference works but it will be very slow. PaddleOCR-VL-1.6 and handwriting recognition are experimental.</p>
+        <p>Online choices are Mistral OCR, Azure Document Intelligence Read and Google Cloud Vision document OCR, using your own account and API key. <strong>Online OCR sends selected manuscript page images off your computer to the configured provider, outside Verwrity's control.</strong></p>
+        <p>Import a video or images first, then check the thumbnails. You can choose the video orientation, manually uncheck repeats, reorder pages and add any missing photos or video frames. Likely repeats are automatically deselected at a similarity threshold you can change (75% by default).</p>
+        <p><strong>Show unchecked thumbnails</strong> lets you hide the repeated snaps you've deselected. You can then use <strong>Previous/Next capture</strong> beside the large preview to scroll through nearby frames. Choose <strong>Keep this capture</strong> to swap your checked image for the new one.</p>
+        <p>Preview crop and rotation before running OCR. <strong>Image processing profile</strong> allows you to adjust brightness, contrast, sharpness, image size and colour mode. Start with a longest edge of 1288 px for olmOCR and check for faint letters and punctuation. Preview one page, then apply the profile to that page or all uninserted pages.</p>
+        <p>Run OCR once you're happy with the captures. The progress bar shows the page, stage, elapsed time and token counts when available. It can take a very long time! <strong>Cancel</strong> stops the local worker and keeps completed results; an online request already sent may still finish and incur a charge.</p>
+        <p>Just like dictation mode, for each page you can choose to keep 'raw' text from the OCR model, or use a proposed correction using your LLM, or you can edit and approve each page yourself.</p>
+      </article>
+      <article id="speed-reader" tabindex="-1">
+        <h3>Speed reader</h3>
+        <p>This mode provides a way to read your manuscript while training your reading speed.</p>
+        <p>Choose where to <strong>Start</strong>: your current cursor, the scene beginning or the manuscript beginning. Choose whether to <strong>End</strong> at the current scene or manuscript end.  Click <strong>Play</strong>, or use <strong>Space</strong> to start/pause/resume, and <strong>Escape</strong> or <strong>Exit</strong> to return to writing.</p>
+        <p><strong>Words</strong> sets the group size (1–20), and <strong>Speed</strong> sets 30–2,000 words per minute. <strong>Flash (ms)</strong> controls how long each appearance lasts; <strong>Repeats</strong> shows the same group more than once during its allotted time. For example, one word at 240 WPM lasts 250 ms; two 50 ms flashes appear at the start and halfway through, with blank gaps.</p>
+        <p><strong>WARNING: Some settings produce flashing text. Avoid them if you're sensitive to flashing graphics.</strong></p>
+      </article>
+      <article id="projects" tabindex="-1">
+        <h3>Projects, backups, and portable copies</h3>
+        <p><strong>File operations</strong> offers <strong>New</strong>, <strong>Open</strong>, <strong>Save project</strong>, <strong>Duplicate</strong>, <strong>Import</strong>, and <strong>Export</strong>.</p>
+        <p>Your project is saved to a local library, which is in your Verwrity user-data directory.</p>
+        <p><strong>Export</strong> downloads a portable <code>.verwrity.zip</code> which contains your human readable manuscript, wiki, structure, comments, and history. I recommend you export it occasionally and keep copies somewhere separate for backups.</p>
+        <p><strong>Import</strong> allows you to upload a zip archive.</p>
+        <p><strong>File operations → Manuscript backup → Download .txt</strong> downloads all your scenes in reading order with their numbered titles, descriptions, and exact prose. This is a good way to backup your manuscript alone, but you can't import it back in to Verwrity from this file. You could paste each scene in, but it's better to also save the project zip file. Still, having access to your raw text is reassuring!</p>
+      </article>
+      <article id="recovery" tabindex="-1">
+        <h3>Saving and recovery</h3>
+        <p>Verwrity cares about your work! There are several separate safety tools: recovery drafts are automatically saved in case your work is interrupted, project saves are stored in your library, you can save revision checkpoints for your scenes, and you can export copies of your project and your manuscript text so that you can keep independent backups.</p>
+        <p>At startup, if you didn't save at the end of your last session, you will be offered the option to contine from the most recent draft to resume it. Even so, I recommend you save with <strong>Ctrl+S</strong> frequently, and export backups every now and again.</p>
+        <p>If saving fails, keep the tab open and use <strong>Retry save</strong> when offered. A stale-save conflict means another tab or session changed the project: copy your browser text somewhere safe before reopening the latest version. Try not to run Verwrity in more than one tab at a time, it's not supported and could lead to inconsistent saves.</p>
+      </article>
+      <article id="project-features" tabindex="-1"><span id="world-authoring" tabindex="-1"></span><span id="fingal-transfer" tabindex="-1"></span>
+        <h3>Optional features</h3>
+        <p><strong>Settings → Prototype features</strong> can be used to enable extra tools such as a <strong>Map Editor</strong> and <strong>Game Character Sheets</strong>. These are under development and so while you're welcome to try them if they interest you, they are likely to change a lot over time. 'Fingal' is a text-based adventure game engine I'm working on, Verwrity will be able to edit game stories for that project, and so these features are focussed on development of stories for an as-yet unreleased game engine and probably not of interest to most Verwrity users!</p>
+      </article>
+      <article id="privacy" tabindex="-1">
+        <h3>Privacy and portability</h3>
+        <p>Story files and settings are all local. Local AI models can be set up to process your text or audio on this computer. So Verwrity can be 100% local and used without an internet connection for maximum privacy</p>
+        <p>If you set up remote LLM, TTS, STT or OCR models, your data will be sent over the internet to the configured provider.</p>
+        <p>Your API keys are stored in local user settings and not saved in your project archive. They aren't an encrypted credential vault so you should protect access to your computer and its files.</p>
+        <p>There's no login or account feature. This application is intended for local use. I don't recommend you expose it outside your local area network.</p>
+      </article>
+      <article id="shortcuts" tabindex="-1">
+        <h3>Keyboard shortcuts</h3>
+        <ul><li><strong>Ctrl+S / Cmd+S:</strong> save the project.</li><li><strong>Ctrl+F / Cmd+F:</strong> find and replace while in the manuscript.</li><li><strong>Right Ctrl:</strong> hold for dictation, or double-press to latch</li><li><strong>Escape:</strong> cancel dictation or dismiss the active menu/dialog where applicable.</li><li><strong>Panel separators:</strong> focus with <strong>Tab</strong> and use arrow keys to resize. Dragging with your mouse works too.</li></ul>
+      </article>
+      <article id="troubleshooting" tabindex="-1">
+        <h3>When something needs attention</h3>
+        <p>If a <strong>Verwrity server unavailable</strong> message appears, keep this tab open and start the Verwrity server again. Don't reload or close a tab. The UI checks automatically and closes the warning when the connection returns.</p>
+        <ul><li><strong>Controls have disappeared:</strong> open the floating <strong>Workspace</strong> button and choose <strong>Show editor controls</strong>, restore the toolbar, or <strong>Exit focus</strong>. <strong>Layout → Restore default layout</strong> resets panels and bars.</li><li><strong>Findings are stale:</strong> you need to click <strong>Rerun analysis</strong> after you make any changes.</li><li><strong>A note lost its mark:</strong> use <strong>Analysis → Comments ⋯ → Review comments</strong>.</li><li><strong>AI can't connect:</strong> check the your AI settings and that your local LLM server is running.</li><li><strong>Local voice or transcription can't load:</strong> check your AI model settings.</li><li><strong>Microphone unavailable:</strong> check browser permission</li><li><strong>Save error or conflict:</strong> copy any unsaved writing somewhere safe and follow <a href="#recovery">Saving and recovery</a> before navigating away.</li></ul>
+        <p>After updating application code, restart the server and refresh the browser so both use the same version.</p>
+      </article>
+    </div>
+  </section>
+  <section class="help-section" id="support" tabindex="-1">
+    <h2>Support my work</h2>
+    <p>If you find Verwrity useful, I would be very grateful for your support.</p>
+    {% if support_links %}<div class="help-guides">
+      {% for link in support_links %}
+      <article>
+        {% if link.label == "Buy Me a Coffee" %}<h3>Buy me a coffee</h3><p>I get a real buzz if you leave me a one-off thank-you through Buy Me a Coffee! That sort of appreciation really motivates me to keep working on the tool. Or if Verwrity becomes a valuable part of your writing routine, please consider supporting its development with a regular contribution, which you can also do through Buy Me a Coffee. This is the only income I make through all of my free, opensource work, so I really appreciate the support, thank you!</p>
+        {% elif link.label == "Patreon" %}<h3>Offer regular support</h3><p>Patreon offers a way to contribute regularly and support ongoing development.</p>
+        {% elif link.label == "Kickstarter" %}<h3>Back a campaign</h3><p>When a Kickstarter campaign is available, you can support the work described by that campaign.</p>{% endif %}
+        <nav class="help-support-links" aria-label="{{ link.label }} support link">
+          <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">{{ link.label }} ↗</a>
+        </nav>
+      </article>
+      {% endfor %}
+    </div>{% else %}<p>There aren't any support links configured in this copy of Verwrity.</p>{% endif %}
+  </section>
+  <a class="help-return" href="{{ url_for('workspace.index') }}">Back to your story <span aria-hidden="true">→</span></a>
+</main>
+{% endblock %}

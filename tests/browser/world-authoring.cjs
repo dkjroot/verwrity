@@ -1,0 +1,200 @@
+/* Map and character authoring share the wiki; disabled tools and source buffers stay protected. */
+const assert = require('node:assert/strict');
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+
+(async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    const errors = []; page.on('pageerror', error => errors.push(error.message));
+    page.on('dialog', dialog => dialog.accept());
+    const url = process.env.VERWRITY_TEST_URL || 'http://127.0.0.1:8765';
+    assert((await (await page.request.get(`${url}/__browser_test__`)).json()).isolated);
+    await page.request.post(`${url}/__browser_test__/reset`);
+    await page.goto(url);
+    await page.evaluate(() => document.querySelector('#start-dialog')?.close());
+    await page.waitForFunction(() => window.verwrityEditor && window.verwrityWiki);
+    let providerCalls = 0;
+    page.on('request', request => { if (/\/ai\/ask|\/text-analysis\/|\/wiki\/.*\/ai\//.test(request.url())) providerCalls++; });
+    const original = await page.evaluate(() => window.verwrityEditor.getText());
+    assert.equal(await page.locator('[data-open-world-map], [data-new-world-character], [data-world-map-panel]').count(), 0);
+    const featureDialog = page.getByRole('dialog', { name: 'Prototype features', exact: true });
+    const enable = async (map, characters) => {
+      await page.locator('.toolbar .settings-menu summary').click();
+      await page.locator('.toolbar [data-open-project-features]').click();
+      await page.waitForFunction(() => !document.querySelector('[data-save-project-features]').disabled);
+      await featureDialog.getByRole('checkbox', { name: 'Map editor', exact: true }).setChecked(map);
+      await featureDialog.getByRole('checkbox', { name: 'Game character sheets', exact: true }).setChecked(characters);
+      await featureDialog.getByRole('button', { name: 'Save features' }).click();
+      await featureDialog.getByRole('status').filter({ hasText: /Features saved/ }).waitFor();
+      await featureDialog.getByRole('button', { name: 'Close', exact: true }).click();
+      await page.waitForFunction(({ map, characters }) => window.verwrityWorld?.mapEnabled === map && window.verwrityWorld?.characterEnabled === characters, { map, characters });
+    };
+    const prompt = async (action, value, accept, adopt = false) => {
+      await action();
+      await page.locator('#app-dialog-input').fill(value);
+      await page.locator('#app-dialog').getByRole('button', { name: accept, exact: true }).click();
+      if (adopt) await page.locator('#app-dialog').getByRole('button', { name: 'Use existing page', exact: true }).click();
+      await page.locator('#app-dialog').waitFor({ state: 'hidden' });
+    };
+    const wiki = page.locator('[data-wiki-current-page]');
+    const form = page.locator('[data-world-record-form]');
+    const field = name => form.locator(`[data-record-field="${name}"]`).first();
+    const read = () => page.request.get(`${url}/world/state`).then(response => response.json());
+    const saveRecord = async label => {
+      await form.getByRole('button', { name: label, exact: true }).click();
+      await form.waitFor({ state: 'hidden' });
+    };
+    await enable(true, false);
+    assert.equal(await page.locator('[data-new-world-character]').count(), 0);
+    await page.locator('.toolbar [data-open-world-map]').click();
+    assert.equal(await page.locator('.manuscript').isVisible(), false);
+    assert.equal(await page.locator('.storyboard > .storyboard-heading').isVisible(), false);
+    assert(await page.locator('[data-map-nav]').isVisible());
+    assert(await page.locator('#wiki-panel').isVisible());
+    await prompt(() => page.locator('[data-world-map-panel]').getByRole('button', { name: 'New map', exact: true }).click(), 'Coast', 'Create map');
+    await page.locator('[data-world-map-grid]').getByRole('button', { name: 'Add location at 0, 0', exact: true }).waitFor();
+    await page.request.post(`${url}/wiki/page/create`, { form: { title: 'Harbour' } });
+    await page.evaluate(() => window.verwrityWorld.reload());
+    const existingHarbour = (await read()).pages.find(page => page.title === 'Harbour');
+    await prompt(() => page.getByRole('button', { name: 'Add location at 0, 0', exact: true }).click(), 'Harbour', 'Create location', true);
+    await wiki.getByRole('heading', { name: 'Harbour', exact: true }).waitFor();
+    let state = await read();
+    const harbour = state.pages.find(page => page.title === 'Harbour');
+    assert.equal(harbour.id, existingHarbour.id);
+    await wiki.getByRole('button', { name: 'Edit map location', exact: true }).click();
+    await form.waitFor();
+    await field('description').fill('A quiet working harbour.');
+    await field('location_id').fill('harbour');
+    await saveRecord('Save location');
+    await prompt(() => page.getByRole('button', { name: 'Add location at 1, 0', exact: true }).click(), 'Quay', 'Create location');
+    await wiki.getByRole('heading', { name: 'Quay', exact: true }).waitFor();
+    state = await read();
+    const quay = state.pages.find(page => page.title === 'Quay');
+    await page.locator(`[data-map-cell="${harbour.id}"]`).click();
+    await wiki.getByRole('button', { name: 'Edit map location' }).click();
+    await form.waitFor();
+    const directions = form.locator('[data-record-list="directions"]');
+    await directions.locator(':scope > summary').click();
+    await directions.getByRole('button', { name: 'Add directions entry' }).click();
+    await directions.locator('[data-record-field="direction"]').selectOption('east');
+    await directions.locator('[data-record-field="target_page_id"]').selectOption(quay.id);
+    await directions.locator('[data-record-field="travel_time"]').fill('12');
+    await saveRecord('Save location');
+    assert.equal((await read()).pages.find(page => page.id === harbour.id).world.location.directions[0].travel_time, 12);
+    await page.locator('[data-world-selection]').getByRole('button', { name: 'Set initial location' }).click();
+    await page.waitForFunction(id => document.querySelector(`[data-map-cell="${id}"]`).parentElement.textContent.includes('Start'), harbour.id);
+
+    await enable(true, true);
+    await page.request.post(`${url}/wiki/page/create`, { form: { title: 'Mara' } });
+    await page.evaluate(() => window.verwrityWorld.reload());
+    const existingMara = (await read()).pages.find(page => page.title === 'Mara');
+    await page.request.post(`${url}/wiki/page/${existingMara.id}/save`, { form: { title: 'Mara', body: 'Existing author background.', page_hash: existingMara.page_hash } });
+    await page.evaluate(() => window.verwrityWorld.reload());
+    await prompt(() => page.locator('[data-new-world-character]').click(), 'Mara', 'Create character', true);
+    await wiki.getByRole('heading', { name: 'Mara', exact: true }).waitFor();
+    state = await read(); const mara = state.pages.find(page => page.title === 'Mara');
+    assert.equal(mara.id, existingMara.id);
+    assert.match(await wiki.innerText(), /Existing author background/);
+    await wiki.getByRole('button', { name: 'Edit character sheet' }).click();
+    await form.waitFor();
+    await field('character_id').fill('mara');
+    await field('pronouns').fill('she/her');
+    await field('age').fill('32');
+    await field('home_location').selectOption(harbour.id);
+    const combat = form.locator('[data-record-object="combat"]');
+    await combat.locator(':scope > summary').click();
+    await combat.getByRole('checkbox', { name: 'Include combat', exact: true }).check();
+    await combat.locator('[data-record-field="might"]').fill('4');
+    await combat.locator('[data-record-field="skills"]').fill('second_wind\nheavy_blow');
+    const inventory = form.locator('[data-record-list="inventory"]');
+    await inventory.locator(':scope > summary').click();
+    await inventory.getByRole('button', { name: 'Add inventory entry' }).click();
+    await inventory.locator('[data-record-field="item"]').fill('sword');
+    const equipment = form.locator('[data-record-list="equipped"]');
+    await equipment.locator(':scope > summary').click();
+    await equipment.getByRole('button', { name: 'Add equipped entry' }).click();
+    await equipment.locator('[data-record-field="item"]').fill('sword');
+    await equipment.locator('[data-record-field="slot"]').selectOption('right_hand');
+    await saveRecord('Save character sheet');
+    assert.match(await wiki.innerText(), /Might 4/);
+    assert.match(await wiki.innerText(), /Starting equipment: sword/);
+    assert.equal(await page.evaluate(() => window.verwrityEditor.getText()), original);
+    const resident = page.locator(`[data-map-cell="${harbour.id}"]`).locator('..').getByRole('button', { name: 'Mara', exact: true });
+    assert(await resident.isVisible());
+    await resident.click();
+    await wiki.getByRole('button', { name: 'Show starting cell on map' }).click();
+    await wiki.getByRole('heading', { name: 'Harbour', exact: true }).waitFor();
+    await wiki.getByRole('button', { name: 'Mara', exact: true }).click();
+
+    // A failed save retains the record form, including its selected equipment.
+    await wiki.getByRole('button', { name: 'Edit character sheet' }).click();
+    await form.waitFor();
+    await field('age').fill('33');
+    await page.route(`**/world/pages/${mara.id}`, route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Test write failed; retry.' }) }));
+    await form.getByRole('button', { name: 'Save character sheet' }).click();
+    await form.getByRole('status').filter({ hasText: /Test write failed/ }).waitFor();
+    assert.equal(await field('age').inputValue(), '33');
+    assert.equal((await read()).pages.find(page => page.id === mara.id).world.character.age, 32);
+    await page.unroute(`**/world/pages/${mara.id}`);
+    await saveRecord('Save character sheet');
+
+    // Declining navigation retains unsaved wiki prose and exact authorship buffers.
+    await wiki.getByRole('button', { name: 'Edit page', exact: true }).click();
+    const prose = page.locator('[data-wiki-page-editor] textarea[name="body"]');
+    await prose.fill('Human background, unsaved.');
+    await page.locator(`[data-map-cell="${quay.id}"]`).click();
+    await page.locator('#app-dialog').getByRole('button', { name: 'Cancel', exact: true }).click();
+    assert.equal(await prose.inputValue(), 'Human background, unsaved.');
+    await page.locator('[data-wiki-page-editor]').getByRole('button', { name: 'Cancel edit', exact: true }).click();
+
+    // Rename in the ordinary wiki editor; all map/character references retain IDs.
+    await wiki.getByRole('button', { name: 'Edit page', exact: true }).click();
+    await page.locator('[data-wiki-page-editor] input[name="title"]').fill('Mara Vale');
+    await page.locator('[data-wiki-page-editor] textarea[name="body"]').fill('Human background.');
+    await page.locator('[data-wiki-page-editor]').getByRole('button', { name: 'Save page', exact: true }).click();
+    await page.waitForURL(/wiki_page=/);
+    await page.waitForFunction(() => window.verwrityWorld?.mapEnabled && document.body.dataset.workspaceView === 'map');
+    await wiki.getByRole('heading', { name: 'Mara Vale', exact: true }).waitFor();
+    assert.equal((await read()).pages.find(page => page.id === mara.id).world.character.home_location, harbour.id);
+    assert.deepEqual(await page.evaluate(id => window.verwrityWorld.residents(id).map(page => page.title), harbour.id), ['Mara Vale']);
+    await page.locator(`[data-map-cell="${harbour.id}"]`).locator('..').getByRole('button', { name: 'Mara Vale', exact: true }).waitFor();
+
+    // Both workspaces retain their own panels/focus layout and manuscript buffers.
+    await page.locator('[data-return-manuscript]').click();
+    assert(await page.locator('.manuscript').isVisible());
+    assert(await page.locator('.storyboard > .storyboard-heading').isVisible());
+    for (const mode of ['[data-standard-focus-toggle]', '[data-typewriter-toggle]']) {
+      await page.locator('.focus-menu > summary').click();
+      await page.locator(mode).click();
+      const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('verwrity-workspace-layout-v1')));
+      await page.locator('.writing-restore-controls > summary').click();
+      await page.locator('.writing-restore-controls [data-open-world-map]').click();
+      assert(await page.locator('#wiki-panel').isVisible());
+      assert(await page.locator('[data-map-nav]').isVisible());
+      await page.locator('[data-return-manuscript]').click();
+      const restored = await page.evaluate(() => JSON.parse(localStorage.getItem('verwrity-workspace-layout-v1')));
+      for (const key of ['focusMode', 'typewriterMode', 'normalPanels', 'focusPanels', 'typewriterPanels', 'maximized']) assert.deepEqual(restored[key], saved[key]);
+      if (!(await page.locator('.writing-restore-controls').evaluate(details => details.open))) await page.locator('.writing-restore-controls > summary').click();
+      await page.locator('[data-exit-focus]').click();
+    }
+    await page.evaluate(() => { window.verwrityEditor.setText('Keep this actively edited manuscript.'); window.dispatchEvent(new Event('verwrity-editor-change')); });
+    await page.locator('.toolbar [data-open-world-map]').click();
+    await page.setViewportSize({ width: 1024, height: 640 });
+    assert(await page.locator('#wiki-panel').isVisible());
+    assert.equal(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1), true);
+    if (process.env.VERWRITY_WORLD_SCREENSHOT) await page.screenshot({ path: process.env.VERWRITY_WORLD_SCREENSHOT });
+    await enable(false, false);
+    assert.equal(await page.locator('[data-world-map-panel], [data-map-nav], [data-open-world-map], [data-new-world-character]').count(), 0);
+    assert.equal(await page.locator('.wiki-world-record, .wiki-world-tools').count(), 0);
+    assert(await page.locator('.manuscript').isVisible());
+    assert.equal(await page.evaluate(() => window.verwrityEditor.getText()), 'Keep this actively edited manuscript.');
+    await enable(true, true);
+    const restored = await read();
+    assert.equal(restored.maps.length, 1);
+    assert.equal(restored.pages.find(page => page.id === mara.id).world.character.age, 33);
+    assert.equal(providerCalls, 0);
+    assert.deepEqual(errors, []);
+    console.log('PASS: opt-in maps and wiki character forms, routes/residents, stable IDs, wiki/prose buffers, retry, short viewport, disable/re-enable safety.');
+  } finally { await browser.close(); }
+})().catch(error => { console.error(error); process.exitCode = 1; });
