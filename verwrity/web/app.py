@@ -1,7 +1,6 @@
 """Application factory and development server entry point."""
 
-from socketserver import ThreadingMixIn
-from wsgiref.simple_server import WSGIServer, make_server
+from werkzeug.serving import make_server
 import os
 import logging
 from pathlib import Path
@@ -37,12 +36,6 @@ from verwrity.web.routes.workspace import workspace_blueprint
 from verwrity.web.routes.wiki import wiki_blueprint
 from verwrity.web.routes.world import world_blueprint
 from verwrity.web.routes.fingal import fingal_blueprint
-
-
-class ThreadingWSGIServer(ThreadingMixIn, WSGIServer):
-    """Keep long explicit model requests from blocking ordinary workspace use."""
-
-    daemon_threads = True
 
 
 def configure_logging() -> None:
@@ -132,7 +125,9 @@ def main() -> None:
     port = 8000
     app = create_app()
     app.logger.info("Verwrity starting at http://127.0.0.1:%s", port)
-    with make_server("127.0.0.1", port, app, ThreadingWSGIServer) as server:
+    # Threaded Werkzeug serves HTTP/1.1 with chunked response framing. This
+    # supports incremental NDJSON/SSE without relying on connection closure.
+    with make_server("127.0.0.1", port, app, threaded=True) as server:
         server.serve_forever()
 
 

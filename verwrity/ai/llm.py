@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import json
 import ipaddress
+import socket
+import ssl
 from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Protocol
@@ -22,6 +24,49 @@ class LLMConfigurationError(ValueError):
 
 class LLMRequestError(RuntimeError):
     """A model request failed without exposing credentials or manuscript text."""
+
+
+def _request_error(error: Exception) -> LLMRequestError:
+    """Describe failures without returning provider bodies, URLs or credentials."""
+    if isinstance(error, HTTPError):
+        detail = {
+            400: "The provider rejected the request. Check the model name and API settings.",
+            401: "The provider rejected the API key. Check or replace the saved key.",
+            403: "Access was denied. Check the API key's permissions and model access.",
+            404: "The model or API endpoint was not found. Check the model name and endpoint.",
+            429: "The provider's rate limit or quota was exceeded. Check your quota and billing, or try again later.",
+        }.get(error.code, "The provider could not complete the request. Try again later.")
+        # Gemini can report an invalid key as HTTP 400. Inspect only known
+        # machine-readable reasons; free-form messages may echo private input.
+        try:
+            payload = json.loads(error.read(65536))
+            details = payload.get("error", {}).get("details", [])
+            reasons = {item.get("reason") for item in details if isinstance(item, dict) and isinstance(item.get("reason"), str)}
+            if reasons & {"API_KEY_INVALID", "API_KEY_EXPIRED"}:
+                detail = "The provider rejected the API key as invalid or expired. Replace the saved key in LLM settings."
+            elif "SERVICE_DISABLED" in reasons:
+                detail = "The provider API is disabled for this key's project. Enable the API in your provider account."
+        except (OSError, ValueError, AttributeError, TypeError):
+            pass
+        finally:
+            error.close()
+        return LLMRequestError(f"Model request failed (HTTP {error.code}). {detail}")
+    reason = error.reason if isinstance(error, URLError) else error
+    if isinstance(reason, ssl.SSLCertVerificationError):
+        detail = "TLS certificate verification failed. Check the Python installation's trusted certificates and any network proxy."
+    elif isinstance(reason, ssl.SSLError):
+        detail = "A secure TLS connection could not be established. Check the endpoint and network proxy."
+    elif isinstance(reason, (TimeoutError, socket.timeout)):
+        detail = "The model request timed out. Check the connection or try again later."
+    elif isinstance(reason, socket.gaierror):
+        detail = "The model endpoint's hostname could not be resolved. Check the endpoint, internet connection and DNS settings."
+    elif isinstance(reason, ConnectionRefusedError):
+        detail = "The model endpoint refused the connection. Check that the server is running and the endpoint port is correct."
+    elif isinstance(error, (URLError, OSError)):
+        detail = "Could not connect to the model endpoint. Check the endpoint, network connection and proxy settings."
+    else:
+        detail = "The model endpoint returned an invalid response for the selected API standard. Check the API standard and model settings."
+    return LLMRequestError(detail)
 
 
 DEFAULT_ENDPOINTS = {
@@ -132,7 +177,7 @@ class HTTPChatClient:
             else:
                 content = "\n".join(part["text"] for part in payload["candidates"][0]["content"]["parts"] if "text" in part)
         except (HTTPError, URLError, TimeoutError, OSError, ValueError, KeyError, IndexError, TypeError) as error:
-            raise LLMRequestError("The selected model endpoint could not complete the question. Check its settings and try again.") from error
+            raise _request_error(error) from error
         if not isinstance(content, str) or not content.strip():
             raise LLMRequestError("The model endpoint returned no text response.")
         return content.strip()
@@ -193,7 +238,7 @@ class HTTPChatClient:
                     if delta:
                         yield delta
         except (HTTPError, URLError, TimeoutError, OSError, ValueError, KeyError, IndexError, TypeError) as error:
-            raise LLMRequestError("The selected model endpoint could not complete the question. Check its settings and try again.") from error
+            raise _request_error(error) from error
 
     def _stream_delta(self, data: str) -> str:
         if data == "[DONE]":

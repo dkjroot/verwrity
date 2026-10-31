@@ -15,8 +15,10 @@ for (const kind of ["llm", "tts", "stt"]) {
   async function test(file) {
     if (!form.reportValidity()) return;
     button.disabled = true; status.textContent = "Testing configuration…";
+    let stage = "saving settings";
     try {
       await form.saveConfiguration();
+      stage = "waiting for the test result";
       if (kind === "llm") {
         const result = await postProgress("/ai/models/llm/test", {}, { onProgress: e => { status.textContent = `${e.stage} · ${e.elapsed}s elapsed`; } });
         status.textContent = `${result.matched ? "✓ Test passed" : "Provider responded; inspect its reply"} (${result.model}): ${result.text}`;
@@ -33,7 +35,12 @@ for (const kind of ["llm", "tts", "stt"]) {
           panel.querySelector("audio")?.remove(); panel.append(audio); status.textContent = "✓ Audio generated. Play it to check the saved voice.";
         }
       }
-    } catch (e) { status.textContent = e.message; }
+    } catch (e) {
+      status.textContent = e instanceof TypeError
+        ? `The browser could not complete the request to Verwrity while ${stage}. This can happen even when the server is running. The provider's result could not be confirmed; retry the test.`
+        : e.message;
+      console.warn(`${kind.toUpperCase()} configuration test failed while ${stage}: ${status.textContent}`);
+    }
     finally { button.disabled = false; }
   }
   button.addEventListener("click", async () => {

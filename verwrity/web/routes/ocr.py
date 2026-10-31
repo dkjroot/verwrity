@@ -21,7 +21,7 @@ from verwrity.ai.ocr_worker import OCRWorker
 from verwrity.ai.ocr_capture import (MAX_UPLOAD, MAX_IMAGE_BYTES, capture_video,
     read_image, encoded, transform, fingerprint, similarity, sharpness)
 from verwrity.ai.dictate_draft import configuration_hash
-from verwrity.ai.llm import _is_loopback
+from verwrity.ai.llm import LLMConfigurationError, LLMRequestError, _is_loopback
 from verwrity.project.files import PROJECT_LOCK
 from verwrity.web.services.workspace import active_store
 
@@ -56,7 +56,13 @@ def waiting_events(call, logger, stage):
     def run():
         try: results.put({"result": call()})
         except Exception as error:
-            results.put({"error": str(error) if isinstance(error, OCRError) else "Provider operation failed; existing settings and text are retained."})
+            if isinstance(error, (OCRError, LLMConfigurationError, LLMRequestError)):
+                message = str(error)
+                logger.warning("%s failed: %s", stage, message)
+            else:
+                message = "Provider operation failed; existing settings and text are retained."
+                logger.warning("%s failed (%s)", stage, type(error).__name__)
+            results.put({"error": message})
     Thread(target=run, daemon=True).start()
     start, logged = monotonic(), -15
     logger.info("%s started", stage)
@@ -165,7 +171,9 @@ def test_llm():
         return jsonify(error="Save consent for this exact LLM endpoint before testing."), 403
     client = current_app.extensions["llm_registry"].get(configured["standard"])
     def perform():
-        text = client.complete(configured["endpoint"], configured["model"], configured["token"], "Reply with exactly: Verwrity test OK. No other text.")
+        text = "".join(client.stream(configured["endpoint"], configured["model"], configured["token"], "Reply with exactly: Verwrity test OK. No other text."))
+        if not text.strip():
+            raise LLMRequestError("The model endpoint returned no text response.")
         return {"text": text[:1000], "matched": text.strip() == "Verwrity test OK.", "model": configured["model"]}
     return event_response(waiting_events(perform, current_app.logger, "LLM configuration test"))
 

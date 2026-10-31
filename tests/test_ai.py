@@ -5,6 +5,9 @@ import hashlib
 import sys
 import os
 import types
+import socket
+import ssl
+from urllib.error import HTTPError, URLError
 from unittest.mock import Mock
 from base64 import b64encode
 from io import BytesIO
@@ -13,7 +16,7 @@ from unittest.mock import patch
 
 from verwrity.ai.settings import UserAISettings
 from verwrity.ai.models import KokoroModelInstaller, ModelAsset, ModelDownloadError
-from verwrity.ai.llm import DEFAULT_ENDPOINTS, HTTPChatClient, LLMRegistry
+from verwrity.ai.llm import DEFAULT_ENDPOINTS, HTTPChatClient, LLMRegistry, LLMRequestError
 from verwrity.ai.interrogation import select_context
 from verwrity.ai.tts import EdgeTTSProvider, GoogleCloudTTSProvider, SynthesisOptions, TTSRegistry, _keep_kokoro_onset
 from verwrity.domain.story import StoryProject
@@ -424,6 +427,63 @@ class AIModelsTest(unittest.TestCase):
 
 
 class LLMHTTPClientTest(unittest.TestCase):
+    def test_provider_failures_explain_status_without_exposing_private_response(self):
+        cases = [
+            (400, {"error": {"details": [{"reason": "API_KEY_INVALID"}]}}, "invalid or expired"),
+            (400, {"error": {"details": [{"reason": "SERVICE_DISABLED"}]}}, "API is disabled"),
+            (400, {"error": []}, "rejected the request"),
+            (401, {}, "rejected the API key"),
+            (403, {}, "permissions"),
+            (404, {}, "not found"),
+            (429, {}, "quota"),
+            (503, {}, "Try again later"),
+            (302, {}, "could not complete"),
+        ]
+        for streaming in (False, True):
+            for code, payload, expected in cases:
+                with self.subTest(streaming=streaming, code=code, payload=payload):
+                    payload["private"] = "secret-key and manuscript text"
+                    body = BytesIO(json.dumps(payload).encode())
+                    error = HTTPError("https://private.test/secret-key", code, "private reason", {}, body)
+                    opener = Mock()
+                    opener.open.side_effect = error
+                    client = LLMRegistry().get("google")
+                    with patch("verwrity.ai.llm.build_opener", return_value=opener):
+                        with self.assertRaises(LLMRequestError) as raised:
+                            if streaming:
+                                list(client.stream(client.default_endpoint, "model", "secret-key", "manuscript text"))
+                            else:
+                                client.complete(client.default_endpoint, "model", "secret-key", "manuscript text")
+                    message = str(raised.exception)
+                    self.assertIn(f"HTTP {code}", message)
+                    self.assertIn(expected, message)
+                    for private in ("secret-key", "manuscript text", "private.test", "private reason"):
+                        self.assertNotIn(private, message)
+                    self.assertTrue(body.closed)
+
+    def test_connection_failures_explain_cause_for_complete_and_stream(self):
+        cases = [
+            (URLError(ssl.SSLCertVerificationError(1, "private")), "certificate verification failed"),
+            (URLError(socket.gaierror(-2, "private")), "hostname could not be resolved"),
+            (URLError(ConnectionRefusedError("private")), "refused the connection"),
+            (URLError(TimeoutError("private")), "timed out"),
+            (TimeoutError("private"), "timed out"),
+            (URLError("private"), "Could not connect"),
+        ]
+        client = LLMRegistry().get("google")
+        for streaming in (False, True):
+            for error, expected in cases:
+                with self.subTest(streaming=streaming, error=error):
+                    opener = Mock()
+                    opener.open.side_effect = error
+                    with patch("verwrity.ai.llm.build_opener", return_value=opener):
+                        with self.assertRaisesRegex(LLMRequestError, expected) as raised:
+                            if streaming:
+                                list(client.stream(client.default_endpoint, "model", "key", "text"))
+                            else:
+                                client.complete(client.default_endpoint, "model", "key", "text")
+                    self.assertNotIn("private", str(raised.exception))
+
     def test_known_api_defaults_and_registry(self):
         choices = {item["id"]: item for item in LLMRegistry().choices()}
         self.assertEqual(choices["openai_compatible"]["default_endpoint"], "https://api.openai.com/v1")

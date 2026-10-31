@@ -13,6 +13,7 @@ from verwrity.ai.ocr_worker import OCRWorker
 from verwrity.ai.ocr_capture import fingerprint, similarity, transform, sharpness
 from verwrity.ai.ocr_preprocess import ImageProfile
 from verwrity.ai.settings import UserAISettings
+from verwrity.ai.llm import LLMConfigurationError, LLMRequestError
 from tests import test_ocr as base
 from verwrity.web.routes.ocr import SAMPLE_TEXT
 
@@ -91,19 +92,66 @@ class DiscoveryTests(unittest.TestCase):
             self.assertTrue(model_issue(folder, "olmocr"))
 
 
-@unittest.skipUnless(base.Image, "Requires ocr-import")
-class FeedbackRoutes(unittest.TestCase):
-    setUp = base.RouteTests.setUp
+class LLMConfigurationRoutes(unittest.TestCase):
+    def setUp(self):
+        temp = TemporaryDirectory(); self.addCleanup(temp.cleanup)
+        self.app = base.create_app(base.ProjectStore(base.StoryProject.demo()))
+        self.app.config["TESTING"] = True
+        self.app.extensions["ai_settings"] = UserAISettings(temp.name)
+        self.client = self.app.test_client()
 
     def test_llm_configuration_probe_uses_only_fixed_test_text(self):
         settings = self.app.extensions["ai_settings"]
         settings.update_llm("local-user", {"endpoint": "localhost:8080", "model": "fixture"}, self.app.extensions["llm_registry"])
         client = self.app.extensions["llm_registry"].get("openai_compatible")
-        with patch.object(type(client), "complete", return_value="Verwrity test OK.") as call:
+        with patch.object(type(client), "stream", return_value=iter(["Verwrity ", "test OK."])) as call, \
+                patch.object(type(client), "complete", side_effect=AssertionError("Test must use provider streaming")):
             response = self.client.post("/ai/models/llm/test", json={})
             events = [json.loads(line) for line in response.data.splitlines()]
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "application/x-ndjson")
+        self.assertEqual(response.headers["Cache-Control"], "no-store")
         self.assertTrue(events[-1]["result"]["matched"])
         self.assertEqual(call.call_args.args[3], "Reply with exactly: Verwrity test OK. No other text.")
+
+    def test_provider_stream_failure_after_a_delta_fails_the_test(self):
+        settings = self.app.extensions["ai_settings"]
+        settings.update_llm("local-user", {"endpoint": "localhost:8080", "model": "fixture"}, self.app.extensions["llm_registry"])
+        client = self.app.extensions["llm_registry"].get("openai_compatible")
+        def interrupted(*args):
+            yield "Verwrity test OK."
+            raise LLMRequestError("The model request timed out.")
+        with patch.object(type(client), "stream", side_effect=interrupted):
+            response = self.client.post("/ai/models/llm/test", json={}, headers={"X-Verwrity-Progress": "1"})
+            events = [json.loads(line) for line in response.data.splitlines()]
+        self.assertEqual(response.mimetype, "application/x-ndjson")
+        self.assertEqual(events[-1]["error"], "The model request timed out.")
+        self.assertFalse(any("result" in event for event in events))
+
+    def test_llm_configuration_failure_reaches_panel_and_server_log(self):
+        settings = self.app.extensions["ai_settings"]
+        settings.update_llm("local-user", {"endpoint": "localhost:8080", "model": "fixture"}, self.app.extensions["llm_registry"])
+        client = self.app.extensions["llm_registry"].get("openai_compatible")
+        for error in (LLMRequestError("Model request failed (HTTP 400). The provider rejected the API key."),
+                      LLMConfigurationError("Enter a valid model endpoint port."),
+                      RuntimeError("private-key and manuscript text")):
+            with self.subTest(error=type(error).__name__):
+                with patch.object(type(client), "stream", side_effect=error), self.assertLogs(self.app.logger, level="WARNING") as logs:
+                    response = self.client.post("/ai/models/llm/test", json={})
+                    events = [json.loads(line) for line in response.data.splitlines()]
+                if isinstance(error, (LLMRequestError, LLMConfigurationError)):
+                    self.assertEqual(events[-1]["error"], str(error))
+                    self.assertIn(str(error), "\n".join(logs.output))
+                else:
+                    self.assertIn("Provider operation failed", events[-1]["error"])
+                    self.assertIn("RuntimeError", "\n".join(logs.output))
+                self.assertNotIn("private-key", response.data.decode() + "\n".join(logs.output))
+
+
+@unittest.skipUnless(base.Image, "Requires ocr-import")
+class FeedbackRoutes(unittest.TestCase):
+    setUp = base.RouteTests.setUp
+
     def test_similarity_weights_text_and_retains_different_pages(self):
         from PIL import ImageDraw
         first = base.Image.new("RGB", (640, 800), "white")
