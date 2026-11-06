@@ -107,6 +107,8 @@ venv/bin/python -m pip install -e .
 venv/bin/python -m verwrity.web.app
 ```
 
+On a Mac, after setting up the environment, you can double-click **run.command** in Finder to start Verwrity. It opens Terminal and starts in the project's folder. Open <http://127.0.0.1:8000> in your browser, and press Ctrl-C in Terminal when you want to stop the server.
+
 On later visits, run the last command from the project folder.
 
 For optional features, stop the server with **Ctrl+C** and run whichever commands you need from the project folder:
