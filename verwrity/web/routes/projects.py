@@ -185,17 +185,46 @@ def discard_recovered_project():
 def download_manuscript():
     from verwrity.project.manuscript_export import plain_manuscript
     from verwrity.project.archive import safe_filename
-    from verwrity.web.services.workspace import scene_source_hash
-    store = active_store()
-    project = deepcopy(store.get())
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
         raise ValueError("Expected a manuscript snapshot")
     include_scene_details = data.get("include_scene_details", True)
     if not isinstance(include_scene_details, bool):
         raise ValueError("Choose whether to include scene titles and descriptions")
+    project, _ = _manuscript_snapshot(data)
+    response = send_file(BytesIO(plain_manuscript(project, include_scene_details=include_scene_details).encode("utf-8")), mimetype="text/plain",
+                         as_attachment=True, download_name=safe_filename(project.title) + ".txt")
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@project_blueprint.post("/project/print-snapshot")
+def print_snapshot():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or data.get("scope") not in ("scene", "manuscript"):
+        raise ValueError("Choose a scene or the whole manuscript to print.")
+    project, scene = _manuscript_snapshot(data)
+    if data["scope"] == "scene":
+        if scene is None:
+            raise ValueError("Choose a scene to print.")
+        scenes = [scene]
+    else:
+        scenes = project.current_scenes()
+    if not any(item.text.strip() for item in scenes):
+        raise ValueError("There is no manuscript text to print.")
+    response = jsonify(title=project.title, scenes=[{"title": item.title, "text": item.text} for item in scenes])
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+def _manuscript_snapshot(data):
+    """Overlay the current editor buffer on a disposable copy for output."""
+    from verwrity.web.services.workspace import scene_source_hash
+
+    project = deepcopy(active_store().get())
     if request.headers.get("X-Verwrity-Project-Id") != str(project.project_id):
-        raise DraftConflict("The active project changed. Reopen the manuscript before exporting")
+        raise DraftConflict("The active project changed. Reopen the manuscript.")
+    scene = None
     scene_id = data.get("scene_id")
     if scene_id:
         scene = project.scene(UUID(scene_id))
@@ -203,7 +232,4 @@ def download_manuscript():
                 or not isinstance(data.get("text"), str)):
             raise DraftConflict("The source scene changed. Your editor buffer is kept here")
         scene.text = data["text"]
-    response = send_file(BytesIO(plain_manuscript(project, include_scene_details=include_scene_details).encode("utf-8")), mimetype="text/plain",
-                         as_attachment=True, download_name=safe_filename(project.title) + ".txt")
-    response.headers["Cache-Control"] = "no-store"
-    return response
+    return project, scene

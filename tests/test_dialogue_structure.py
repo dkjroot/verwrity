@@ -363,6 +363,29 @@ class DialogueRoutesTests(TestCase):
         self.assertEqual(self.client.post("/project/manuscript.txt", headers=self.headers,
             json={"include_scene_details": "false"}).status_code, 400)
 
+    def test_print_snapshot_uses_current_order_and_unsaved_text_without_mutation(self):
+        removed = Scene(uuid4(), "Removed", "", "Old text", historical=True)
+        self.project.scenes[:] = [self.later, removed, self.scene]
+        original = deepcopy(self.project)
+        generation = self.store.generation
+        text = 'Unsaved 😀\n\n“Écoute.”\n'
+        data = {"scene_id": str(self.scene.id), "source_hash": scene_source_hash(self.scene), "text": text}
+        active = {"title": self.scene.title, "text": text}
+        for scope, expected in (
+            ("scene", [active]),
+            ("manuscript", [{"title": self.later.title, "text": self.later.text}, active]),
+        ):
+            response = self.client.post("/project/print-snapshot", headers=self.headers, json={**data, "scope": scope})
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json, {"title": self.project.title, "scenes": expected})
+            self.assertEqual(response.headers["Cache-Control"], "no-store")
+        self.assertEqual(self.project, original)
+        self.assertEqual(self.store.generation, generation)
+        self.scene.text = "Changed in another tab."
+        response = self.client.post("/project/print-snapshot", headers=self.headers, json={**data, "scope": "scene"})
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(self.scene.text, "Changed in another tab.")
+
     def test_exact_source_navigation_rejects_stale_offsets_before_committing(self):
         generation = self.store.generation
         before = deepcopy(self.project)

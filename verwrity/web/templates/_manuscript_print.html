@@ -1,0 +1,37 @@
+<dialog class="file-dialog app-dialog" id="manuscript-print-dialog" aria-labelledby="manuscript-print-title">
+  <div class="file-dialog-heading"><h2 id="manuscript-print-title">Print manuscript</h2><button type="button" data-close-print aria-label="Close print settings">×</button></div>
+  <form class="app-dialog-body">
+    <p>Paper size is A4. You can choose a printer or save as PDF in your browser’s print dialog.</p>
+    <div>
+      <label for="manuscript-print-font">Font</label>
+      <select id="manuscript-print-font" name="font">
+        <option value="Georgia, serif">Georgia</option>
+        <option value="'Times New Roman', serif">Times New Roman</option>
+        <option value="Arial, sans-serif">Arial</option>
+        <option value="'Courier New', monospace">Courier New</option>
+      </select>
+    </div>
+    <label>Font size (pt)<input type="number" name="size" value="12" min="8" max="36" required></label>
+    <div>
+      <label for="manuscript-print-spacing">Line spacing</label>
+      <select id="manuscript-print-spacing" name="spacing">
+        <option value="1">Single</option>
+        <option value="1.5" selected>1.5 lines</option>
+        <option value="2">Double</option>
+      </select>
+    </div>
+    <label class="app-dialog-checkbox"><input type="checkbox" name="indent" checked> Indent paragraphs marked for indentation</label>
+    <label class="app-dialog-checkbox"><input type="checkbox" name="headings" checked> Include manuscript and scene headings</label>
+    <fieldset>
+      <legend>Headers and footers</legend>
+      <label class="app-dialog-checkbox"><input type="checkbox" name="header_title" checked> Title in header</label>
+      <label class="app-dialog-checkbox"><input type="checkbox" name="print_date" checked> Date in header</label>
+      <label class="app-dialog-checkbox"><input type="checkbox" name="page_number" checked> Page number in footer</label>
+    </fieldset>
+    <p data-print-status role="status"></p>
+    <div class="app-dialog-actions"><button type="button" data-close-print>Cancel</button><button type="submit">Print…</button></div>
+  </form>
+</dialog>
+<article id="manuscript-print-output"></article>
+<link rel="stylesheet" href="{{ url_for('static', filename='manuscript-print.css') }}">
+<script type="module" src="{{ url_for('static', filename='manuscript-print.js') }}"></script>

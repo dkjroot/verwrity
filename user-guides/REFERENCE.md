@@ -433,6 +433,14 @@ If the server connection is lost, keep the browser tab open and restart the serv
 
 ## Project files and recovery
 
+### Printing
+
+Open **Scene tools → Print scene** for the scene you’re writing, or **File operations → Print manuscript** for all current scenes in storyboard order. Both pick up what’s in the editor, including any text you’ve just typed. If you’re looking at an older version of a scene, return to the current version first.
+
+Choose a font, a size in points and single, one-and-a-half or double line spacing. With indentation on, paragraphs marked as running paragraphs get a first-line indent and fresh sections start at the margin. Untick **Include manuscript and scene headings** to leave the titles out of the main text. The running title, date and page number each have their own checkbox under **Headers and footers**.
+
+The print layout uses A4 portrait with 25 mm margins. Choose **Print…** to check the layout in your browser’s print preview, then send it to a printer or save it as a PDF.
+
 ### What is stored today
 
 Your named projects and recovery files live under `user_files/` in the Verwrity folder. User settings, dictionaries, keys and downloaded models live there too, but aren't all part of the portable project. The current local user is called `local-user`; this isn't a password-protected account system.

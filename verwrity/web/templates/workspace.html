@@ -53,6 +53,7 @@
     <form method="post" action="{{ url_for('projects.duplicate_project') }}" class="file-row"><div><strong>Duplicate project</strong><label for="duplicate-title">New project name</label></div><input id="duplicate-title" name="duplicate_title" placeholder="Copy name"><button type="submit">Duplicate</button></form>
     <form method="post" action="{{ url_for('projects.open_project') }}" enctype="multipart/form-data" class="file-row"><div><strong>Import project</strong><label for="project-file">ZIP archive</label></div><input id="project-file" type="file" name="project_file" accept=".zip,.verwrity.zip" required><button type="submit">Import</button></form>
     <div class="file-row"><div><strong>Manuscript backup</strong><span>Current manuscript as plain text</span></div><button type="button" data-export-manuscript>Download .txt</button></div>
+    <div class="file-row"><div><strong>Print manuscript</strong><span>Print all current scenes on A4</span></div><button type="button" data-print-scope="manuscript" aria-haspopup="dialog">Print manuscript</button></div>
     <form id="export-project-form" method="post" action="{{ url_for('projects.save_project') }}" class="file-row"><div><strong>Export project</strong><span>Download a portable ZIP copy</span></div><input type="hidden" name="project_title"><input type="hidden" name="manuscript"><button type="submit">Export</button></form>
   </div>
 </dialog>
@@ -63,6 +64,7 @@
     <div class="app-dialog-actions"><button type="button" data-close-manuscript-export>Cancel</button><button type="submit">Download .txt</button></div>
   </form>
 </dialog>
+{% include '_manuscript_print.html' %}
 <main class="workspace" data-workspace data-project-id="{{ project.project_id }}" data-project-needs-save="{{ 'true' if project_needs_save else 'false' }}" data-recovery-needs-save="{{ 'true' if recovery_needs_save else 'false' }}" aria-label="Story workspace">
   <aside class="panel storyboard" id="storyboard-panel"><div class="storyboard-heading"><h2>Storyboard</h2><a class="panel-toggle toolbar-link storyboard-open-link" href="{{ url_for('workspace.storyboard') }}" data-storyboard-link>Go to Storyboard</a><button type="button" data-add-scene aria-label="Add scene">+</button></div><p class="muted">Scenes</p><ol>
     {% set word_counts = namespace(total=0) %}
@@ -191,6 +193,7 @@
         <button type="button" data-review-dialogue>Review scene dialogue</button>
         <button type="button" data-split-scene>Split at caret / selection start</button>
         <button type="button" data-join-scenes>Join with next scene</button>
+        <button type="button" data-print-scope="scene" aria-haspopup="dialog"{% if not active_scene %} disabled{% endif %}>Print scene</button>
         <button type="button" data-export-manuscript>Download manuscript (.txt)</button>
       </div></details>
         <details class="editor-menu project-question-tasks">

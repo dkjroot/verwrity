@@ -1,0 +1,61 @@
+#manuscript-print-output { display: none; }
+
+#manuscript-print-dialog select {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--page);
+  color: var(--text);
+  font: inherit;
+}
+
+@page manuscript {
+  size: A4 portrait;
+  margin: 25mm;
+  color: black;
+  font: 9pt system-ui, sans-serif;
+}
+
+@media print {
+  html:has(body[data-printing-manuscript]),
+  body.writing-workspace[data-printing-manuscript] {
+    display: block;
+    height: auto;
+    overflow: visible;
+    margin: 0;
+    background: white;
+    color: black;
+  }
+
+  body[data-printing-manuscript] > :not(#manuscript-print-output) {
+    display: none !important;
+  }
+
+  body[data-printing-manuscript] > #manuscript-print-output {
+    display: block;
+    page: manuscript;
+    overflow-wrap: anywhere;
+  }
+
+  #manuscript-print-output h1,
+  #manuscript-print-output h2 {
+    font-size: 1.25em;
+    margin: 0 0 .75em;
+    break-after: avoid;
+  }
+
+  #manuscript-print-output section + section { margin-block-start: 1.5em; }
+
+  #manuscript-print-output p {
+    margin: 0 0 .65em;
+    white-space: pre-wrap;
+    tab-size: 4;
+    orphans: 2;
+    widows: 2;
+  }
+
+  #manuscript-print-output p:empty { min-height: 1lh; }
+  #manuscript-print-output .print-indent { text-indent: 1.5em; }
+}
