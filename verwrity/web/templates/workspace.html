@@ -406,12 +406,13 @@
       </form>
     </section>
     <section data-ai-panel="llm" hidden>
-      <p>Choose the API format your server supports and its address, for example <code>http://localhost:port</code>.</p>
+      <p>Choose a hosted service or the API format your server supports.</p>
       <form data-ai-llm-form>
-        <label>API standard<select name="standard" data-llm-standard><option value="openai_compatible">OpenAI-compatible</option><option value="anthropic">Anthropic Messages</option><option value="google">Google Gemini</option></select></label>
+        <label>API standard<select name="standard" data-llm-standard><option value="openai_compatible">OpenAI-compatible</option><option value="openrouter">OpenRouter</option><option value="anthropic">Anthropic Messages</option><option value="google">Google Gemini</option></select></label>
+        <p class="muted" data-llm-openrouter-help hidden>Copy the full model ID from the <a href="https://openrouter.ai/models" target="_blank" rel="noopener noreferrer">OpenRouter model list</a> and enter your OpenRouter API key below.</p>
         <label>API base URL<input name="endpoint" type="url" required autocomplete="url" placeholder="http://localhost:port"></label>
         <label>Model name<input name="model" type="text" maxlength="256" required autocomplete="off" placeholder="Model name expected by the endpoint"></label>
-        <label>API token (optional for local servers)<input name="token" type="password" autocomplete="new-password" placeholder="No token needed for many local servers"></label>
+        <label>API key or token<input name="token" type="password" autocomplete="new-password"></label>
         <p class="muted">Your saved token belongs to this API format and server address. Change either and you'll need to enter the token again.</p>
         <label class="ai-consent"><input name="forget_token" type="checkbox"> Remove the saved API token</label>
         <p class="ai-remote-disclosure" data-llm-disclosure></p>

@@ -71,9 +71,12 @@ def _request_error(error: Exception) -> LLMRequestError:
 
 DEFAULT_ENDPOINTS = {
     "openai_compatible": "https://api.openai.com/v1",
+    "openrouter": "https://openrouter.ai/api/v1",
     "anthropic": "https://api.anthropic.com",
     "google": "https://generativelanguage.googleapis.com/v1beta",
 }
+
+OPENAI_CHAT_STANDARDS = {"openai_compatible", "openrouter"}
 
 
 class ChatClient(Protocol):
@@ -142,7 +145,9 @@ class HTTPChatClient:
             raise LLMConfigurationError("Enter the model name required by your endpoint.")
         base = endpoint.rstrip("/")
         headers = {"Content-Type": "application/json", "Accept": "application/json"}
-        if self.standard_id == "openai_compatible":
+        if self.standard_id in OPENAI_CHAT_STANDARDS:
+            if self.standard_id == "openrouter" and not token:
+                raise LLMConfigurationError("Enter an OpenRouter API key in LLM settings.")
             url = f"{base}/chat/completions"
             body = {"model": model, "messages": [{"role": "user", "content": prompt}], "temperature": 0.2}
             if token:
@@ -170,8 +175,13 @@ class HTTPChatClient:
             if len(raw) > 2 * 1024 * 1024:
                 raise LLMRequestError("The model response was too large to display.")
             payload = json.loads(raw)
-            if self.standard_id == "openai_compatible":
-                content = payload["choices"][0]["message"]["content"]
+            if self.standard_id == "openrouter" and isinstance(payload, dict) and payload.get("error"):
+                raise LLMRequestError("OpenRouter could not complete the request. Try again or choose another model.")
+            if self.standard_id in OPENAI_CHAT_STANDARDS:
+                choice = payload["choices"][0]
+                if self.standard_id == "openrouter" and isinstance(choice, dict) and choice.get("finish_reason") == "error":
+                    raise LLMRequestError("OpenRouter could not complete the request. Try again or choose another model.")
+                content = choice["message"]["content"]
             elif self.standard_id == "anthropic":
                 content = "\n".join(item["text"] for item in payload["content"] if item.get("type") == "text")
             else:
@@ -200,7 +210,9 @@ class HTTPChatClient:
             raise LLMConfigurationError("Enter the model name required by your endpoint.")
         base = endpoint.rstrip("/")
         headers = {"Content-Type": "application/json", "Accept": "text/event-stream"}
-        if self.standard_id == "openai_compatible":
+        if self.standard_id in OPENAI_CHAT_STANDARDS:
+            if self.standard_id == "openrouter" and not token:
+                raise LLMConfigurationError("Enter an OpenRouter API key in LLM settings.")
             url = f"{base}/chat/completions"
             body = {"model": model, "messages": [{"role": "user", "content": prompt}], "temperature": 0.2, "stream": True}
             if token:
@@ -245,7 +257,9 @@ class HTTPChatClient:
             return ""
         try:
             payload = json.loads(data)
-            if self.standard_id == "openai_compatible":
+            if self.standard_id == "openrouter" and isinstance(payload, dict) and payload.get("error"):
+                raise LLMRequestError("OpenRouter interrupted the response. Try again or choose another model.")
+            if self.standard_id in OPENAI_CHAT_STANDARDS:
                 return str(payload.get("choices", [{}])[0].get("delta", {}).get("content") or "")
             if self.standard_id == "anthropic":
                 delta = payload.get("delta", {})
@@ -262,6 +276,7 @@ class LLMRegistry:
     def __init__(self, clients: list[ChatClient] | None = None) -> None:
         defaults = [
             HTTPChatClient("openai_compatible", "OpenAI-compatible", DEFAULT_ENDPOINTS["openai_compatible"]),
+            HTTPChatClient("openrouter", "OpenRouter", DEFAULT_ENDPOINTS["openrouter"]),
             HTTPChatClient("anthropic", "Anthropic Messages", DEFAULT_ENDPOINTS["anthropic"]),
             HTTPChatClient("google", "Google Gemini", DEFAULT_ENDPOINTS["google"]),
         ]

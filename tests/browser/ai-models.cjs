@@ -112,6 +112,25 @@ function silentWav() {
     await page.waitForFunction(() => document.querySelector('[data-ai-settings-status]').textContent === "");
     await dialog.locator('[data-ai-tab="llm"]').click();
     const llm = dialog.locator("[data-ai-llm-form]");
+    await llm.locator('[name="standard"]').selectOption("openrouter");
+    assert.equal(await llm.locator('[name="endpoint"]').inputValue(), "https://openrouter.ai/api/v1");
+    assert.equal(await llm.locator("[data-llm-openrouter-help]").isVisible(), true);
+    assert.equal(await llm.locator('[name="remote_consent"]').isChecked(), false);
+    await llm.locator('[name="model"]').fill("example/model");
+    await llm.locator('[name="token"]').fill("test-openrouter-key");
+    await llm.locator('[name="remote_consent"]').check();
+    await Promise.all([
+      page.waitForResponse(response => response.url().endsWith("/ai/models/llm") && response.status() === 200),
+      llm.locator('button[type="submit"]').click(),
+    ]);
+    const openrouterSettings = await page.request.get(`${url}/ai/models`).then(response => response.json());
+    assert.equal(openrouterSettings.settings.llm.standard, "openrouter");
+    assert.equal(openrouterSettings.settings.llm.model, "example/model");
+    assert.equal(openrouterSettings.settings.llm.token_configured, true);
+    assert.equal(openrouterSettings.settings.llm.token, "");
+
+    await llm.locator('[name="standard"]').selectOption("openai_compatible");
+    assert.equal(await llm.locator("[data-llm-openrouter-help]").isVisible(), false);
     await llm.locator('[name="endpoint"]').fill("localhost:8081");
     await llm.locator('[name="model"]').focus();
     await llm.locator('[name="model"]').fill("local-test-model");

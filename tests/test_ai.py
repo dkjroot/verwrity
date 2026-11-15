@@ -206,6 +206,23 @@ class AIModelsTest(unittest.TestCase):
         self.assertFalse(result["token_configured"])
         self.assertFalse(result["remote_consent"])
 
+    def test_openrouter_option_uses_default_endpoint_and_keeps_key_private(self):
+        self.assertIn(b'<option value="openrouter">OpenRouter</option>', self.client.get("/").data)
+        values = {"standard": "openrouter", "model": "example/model", "token": "openrouter-secret"}
+        refused = self.client.post("/ai/models/llm", json=values)
+        self.assertEqual(refused.status_code, 400)
+        self.assertIn("Acknowledge", refused.json["error"])
+
+        saved = self.client.post("/ai/models/llm", json={**values, "remote_consent": True})
+        self.assertEqual(saved.status_code, 200)
+        self.assertEqual(saved.json["endpoint"], "https://openrouter.ai/api/v1")
+        self.assertTrue(saved.json["token_configured"])
+        self.assertNotIn(b"openrouter-secret", saved.data)
+        reloaded = self.client.get("/ai/models").json["settings"]["llm"]
+        self.assertEqual(reloaded["standard"], "openrouter")
+        self.assertEqual(reloaded["model"], "example/model")
+        self.assertTrue(reloaded["remote_consent"])
+
     def test_local_openai_root_is_normalized_to_plain_http_and_v1(self):
         result = self.app.extensions["ai_settings"].update_llm("local-user", {
             "standard": "openai_compatible", "endpoint": "https://localhost:8081", "model": "local-model",
@@ -487,12 +504,14 @@ class LLMHTTPClientTest(unittest.TestCase):
     def test_known_api_defaults_and_registry(self):
         choices = {item["id"]: item for item in LLMRegistry().choices()}
         self.assertEqual(choices["openai_compatible"]["default_endpoint"], "https://api.openai.com/v1")
+        self.assertEqual(choices["openrouter"]["default_endpoint"], "https://openrouter.ai/api/v1")
         self.assertEqual(choices["anthropic"]["default_endpoint"], "https://api.anthropic.com")
         self.assertEqual(choices["google"]["default_endpoint"], "https://generativelanguage.googleapis.com/v1beta")
 
     def test_provider_standards_build_expected_authenticated_requests(self):
         cases = [
             ("openai_compatible", "https://api.example.test/v1", "/chat/completions", "Authorization", "Bearer secret", b'{"choices":[{"message":{"content":"reply"}}]}'),
+            ("openrouter", "https://openrouter.ai/api/v1", "/chat/completions", "Authorization", "Bearer secret", b'{"choices":[{"message":{"content":"reply"}}]}'),
             ("anthropic", "https://api.example.test", "/v1/messages", "X-api-key", "secret", b'{"content":[{"type":"text","text":"reply"}]}'),
             ("google", "https://api.example.test/v1beta", "/models/test-model:generateContent", "X-goog-api-key", "secret", b'{"candidates":[{"content":{"parts":[{"text":"reply"}]}}]}'),
         ]
@@ -540,4 +559,29 @@ class LLMHTTPClientTest(unittest.TestCase):
             self.assertEqual(list(client.stream("http://localhost:8081", "model", "", "question")), ["first ", "second"])
         request = opener.open.call_args.args[0]
         self.assertEqual(request.full_url, "http://localhost:8081/v1/chat/completions")
+        self.assertTrue(json.loads(request.data)["stream"])
+
+    def test_openrouter_stream_handles_keepalives_and_reports_provider_errors(self):
+        response = BytesIO(
+            b': OPENROUTER PROCESSING\n\n'
+            b'data: {"choices":[{"delta":{"content":"first "}}]}\n\n'
+            b'data: {"error":{"message":"private upstream details"},"choices":[{"finish_reason":"error"}]}\n\n'
+        )
+        with patch("verwrity.ai.llm.build_opener") as build_opener:
+            opener = build_opener.return_value
+            opener.open.return_value = response
+            client = LLMRegistry().get("openrouter")
+            with self.assertRaisesRegex(ValueError, "OpenRouter API key"):
+                next(client.stream(client.default_endpoint, "example/model", "", "question"))
+            opener.open.assert_not_called()
+
+            stream = client.stream(client.default_endpoint, "example/model", "secret", "question")
+            self.assertEqual(next(stream), "first ")
+            with self.assertRaisesRegex(LLMRequestError, "OpenRouter interrupted") as raised:
+                next(stream)
+            self.assertNotIn("private upstream details", str(raised.exception))
+        request = opener.open.call_args.args[0]
+        self.assertEqual(request.full_url, "https://openrouter.ai/api/v1/chat/completions")
+        self.assertEqual(request.get_header("Authorization"), "Bearer secret")
+        self.assertEqual(json.loads(request.data)["model"], "example/model")
         self.assertTrue(json.loads(request.data)["stream"])

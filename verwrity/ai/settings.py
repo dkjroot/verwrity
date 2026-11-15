@@ -187,8 +187,10 @@ class UserAISettings:
         standard = values.get("standard", current["standard"])
         if not isinstance(standard, str):
             raise ValueError("Choose a supported LLM API standard")
-        registry.get(standard)
+        provider = registry.get(standard)
         endpoint = values.get("endpoint", current["endpoint"])
+        if standard == "openrouter" and standard != current["standard"] and "endpoint" not in values:
+            endpoint = provider.default_endpoint
         model = values.get("model", current["model"])
         if not isinstance(endpoint, str) or not endpoint.strip() or len(endpoint) > 2048:
             raise ValueError("Enter a valid model endpoint URL")

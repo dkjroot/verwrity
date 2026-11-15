@@ -198,7 +198,9 @@ Each remote voice has its own disclosure in AI Models. Saving your acknowledgeme
 
 ### LLM configuration and project questions
 
-Choose the API format your text-model server supports: OpenAI-compatible, Anthropic Messages or Gemini. Enter its address, model name and any required key. The format needs to match the server; choosing OpenAI-compatible doesn't mean the server must belong to OpenAI.
+In **Settings → AI Models → LLM**, choose the API format your text-model server supports. Enter its address, model name and any required key. The OpenAI-compatible option also works with local servers that use that format.
+
+If you use **OpenRouter**, choose it in the dropdown and Verwrity fills in the API address. Enter your OpenRouter API key and copy the full model ID, including the part before the slash. Tick the box to allow Verwrity to send the selected project text to OpenRouter, then save your settings. [OpenRouter model list](https://openrouter.ai/models)
 
 For example, a local llama.cpp server may listen at `http://localhost:8081`; Verwrity handles the usual API path for that configuration. You still need to start the model server separately. Verwrity connects to it rather than loading a GGUF model itself.
 

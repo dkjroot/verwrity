@@ -152,6 +152,7 @@ function isLocalEndpoint(value) {
 function updateLLMDisclosure() {
   const endpoint = llmForm.elements.namedItem("endpoint").value.trim();
   const local = isLocalEndpoint(endpoint);
+  llmForm.querySelector("[data-llm-openrouter-help]").hidden = llmForm.elements.namedItem("standard").value !== "openrouter";
   document.querySelector("[data-llm-consent-row]").hidden = local;
   const disclosure = document.querySelector("[data-llm-disclosure]");
   disclosure.dataset.processingLocation = local ? "local" : "remote";
@@ -166,7 +167,7 @@ function fillLLM(settings) {
   }
   llmForm.elements.namedItem("token").value = "";
   llmForm.elements.namedItem("token").placeholder = settings.llm.token_configured
-    ? "Saved token; enter a new value to replace" : "No token needed for many local servers";
+    ? "Saved token. Enter a new value to replace it." : "";
   llmForm.elements.namedItem("forget_token").checked = false;
   llmForm.elements.namedItem("remote_consent").checked = Boolean(settings.llm.remote_consent);
   updateLLMDisclosure();
@@ -219,10 +220,12 @@ async function loadSettings() {
 llmForm?.elements.namedItem("standard")?.addEventListener("change", (event) => {
   const standard = llmStandards.get(event.target.value);
   if (standard) llmForm.elements.namedItem("endpoint").value = standard.default_endpoint;
+  llmForm.elements.namedItem("token").placeholder = "";
   llmForm.elements.namedItem("remote_consent").checked = false;
   updateLLMDisclosure();
 });
 llmForm?.elements.namedItem("endpoint")?.addEventListener("input", () => {
+  llmForm.elements.namedItem("token").placeholder = "";
   llmForm.elements.namedItem("remote_consent").checked = false;
   updateLLMDisclosure();
 });
