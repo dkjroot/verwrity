@@ -20,7 +20,6 @@
   {% if view == 'notes' %}
   <form class="storyboard-board" method="post" action="{{ url_for('scenes.save_storyboard') }}" data-storyboard-board aria-label="Storyboard scenes">
     {% for scene in project.current_scenes() %}
-    {% set default_note_colors = ['#f5e8a9', '#f2dda0', '#f6edbd'] %}
     {% set note_color = scene.note_color or default_note_colors[loop.index0 % 3] %}
     <article class="story-note" data-story-note data-scene-id="{{ scene.id }}" style="--story-note-color: {{ note_color }}" aria-label="{{ scene.title }} scene note">
       <input type="hidden" name="scene_id" value="{{ scene.id }}">

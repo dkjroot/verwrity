@@ -18,8 +18,8 @@ selectionMenu?.querySelector("form")?.addEventListener("submit", async (event) =
 });
 
 window.addEventListener("verwrity-context-opened", (event) => {
-  selectedCommentRange = event.detail.range;
-  selectionTitle.value = selectedCommentRange.quote.trim();
+  selectedCommentRange = event.detail?.range;
+  selectionTitle.value = selectedCommentRange?.quote.trim() || "";
 });
 
 selectionMenu?.querySelector("[data-add-comment]")?.addEventListener("click", () => {

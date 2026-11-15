@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
 
 (async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, ...(process.env.BROWSER_CHANNEL ? { channel: process.env.BROWSER_CHANNEL } : {}) });
   try {
     const page = await browser.newPage({ viewport: { width: 1100, height: 650 } });
     const url = process.env.VERWRITY_TEST_URL || "http://127.0.0.1:8765";
@@ -82,12 +82,12 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
     assert.equal(note.body, "Keep this note");
     assert.equal(note.quote, "quiet");
     assert.equal(note.start, Array.from(replaced.slice(0, replaced.indexOf("quiet"))).length, "Other comment anchors map through the replacement");
-    await page.keyboard.press("Control+z");
+    await page.keyboard.press("ControlOrMeta+z");
     assert.equal(await page.evaluate(() => window.verwrityEditor.getText()), prose, "Replacement has a separate undo step");
     assert.equal(await page.evaluate(() => window.verwrityEditor.getComments()[0].quote), "quiet");
-    await page.keyboard.press("Control+y");
+    await page.keyboard.press("ControlOrMeta+Shift+z");
     assert.equal(await page.evaluate(() => window.verwrityEditor.getText()), replaced, "Redo restores replacement");
-    await page.keyboard.press("Control+z");
+    await page.keyboard.press("ControlOrMeta+z");
     assert.equal(await page.evaluate(() => window.verwritySaveActiveScene()), true);
 
     await rightClickWord("happy");
@@ -137,7 +137,31 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
     await page.unroute("**/thesaurus");
     assert.equal(await page.evaluate(() => window.verwrityEditor.getText()), "Changed while looking up.");
     assert.equal(await page.evaluate(() => window.oldThesaurusTarget.replace("stale")), false, "The captured action itself rejects a stale document");
+
+    await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+    const openContextAtSelection = () => page.evaluate(() => {
+      document.querySelector("[data-rich-editor]").dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
+    });
+    await page.evaluate(() => window.verwrityEditor.selectSourceRange(0, 7));
+    await openContextAtSelection();
+    await menu.getByRole("button", { name: "Copy", exact: true }).click();
+    await menu.waitFor({ state: "hidden" });
+    assert.equal(await page.evaluate(() => navigator.clipboard.readText()), "Changed");
+
+    await page.evaluate(() => window.verwrityEditor.setText(""));
+    await page.locator(".tiptap p").click({ button: "right" });
+    assert(await menu.getByRole("button", { name: "Copy", exact: true }).isDisabled());
+    await menu.getByRole("button", { name: "Paste", exact: true }).click();
+    await page.waitForFunction(() => window.verwrityEditor.getText() === "Changed");
+
+    await page.evaluate(() => {
+      window.verwrityEditor.setText("Read only", [], false);
+      window.verwrityEditor.selectSourceRange(0, 4);
+    });
+    await openContextAtSelection();
+    assert(await menu.getByRole("button", { name: "Copy", exact: true }).isEnabled());
+    assert(await menu.getByRole("button", { name: "Paste", exact: true }).isDisabled());
     assert.deepEqual(errors, []);
-    console.log("PASS: offline thesaurus targets words, labels senses, preserves author control, undo, read-only and stale-response safety.");
+    console.log("PASS: manuscript context actions support clipboard access, read-only mode, and stale-safe, undoable thesaurus replacements.");
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 
 (async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, ...(process.env.BROWSER_CHANNEL ? { channel: process.env.BROWSER_CHANNEL } : {}) });
   try {
     const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } });
     const errors = [];
@@ -43,6 +43,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
     assert.equal(saved.provenance, 'human-authored');
     const sceneRow = page.locator(`.scene-row[data-scene-id="${sceneId}"] button.scene`);
     assert.equal(await sceneRow.innerText(), "Mara's crossing", 'name updates immediately in the Scenes list');
+    assert.equal(await page.locator('[data-manuscript-scene-title]').innerText(), "Mara's crossing", 'name updates immediately above the manuscript');
     assert.equal(await sceneRow.getAttribute('title'), 'A new description from the scene card.', 'description updates immediately in the Scenes list');
     assert.equal(llmCalls, 0, 'metadata edits never run an LLM');
     assert.equal(await page.evaluate(() => window.verwrityEditor.getText()), originalText);

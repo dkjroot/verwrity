@@ -25228,7 +25228,7 @@ ${comment.body}`,
   };
   var typewriterMode = document.querySelector("[data-workspace]")?.dataset.typewriterMode === "true";
   var caretMovementEnabled = false;
-  var dictationSourceGeneration = 0;
+  var sourceGeneration = 0;
   var cursorMovementKeys = /* @__PURE__ */ new Set(["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown", "Delete"]);
   function handleTypewriterKeyDown(_view, event) {
     if (!typewriterMode || caretMovementEnabled)
@@ -25259,7 +25259,7 @@ ${comment.body}`,
     parseOptions: { preserveWhitespace: "full" },
     onTransaction: ({ editor: instance, transaction }) => {
       if (transaction.docChanged)
-        dictationSourceGeneration++;
+        sourceGeneration++;
       updatePassageToggle(instance);
     },
     element: root,
@@ -25397,15 +25397,37 @@ ${comment.body}`,
       y,
       () => editor.isEditable && (!typewriterMode || caretMovementEnabled)
     ),
+    captureClipboardTarget: (x, y) => {
+      const view = editor.view;
+      const { doc: doc3, selection } = view.state;
+      const generation = sourceGeneration;
+      const hit = selection.empty && (x || y) ? view.posAtCoords({ left: x, top: y }) : null;
+      const pasteSelection = hit ? TextSelection.near(doc3.resolve(hit.pos)) : selection;
+      const canPaste = () => root.isConnected && generation === sourceGeneration && editor.isEditable && (!typewriterMode || caretMovementEnabled);
+      return {
+        text: selection.empty ? "" : view.serializeForClipboard(selection.content()).text,
+        canPaste: canPaste(),
+        paste: (text) => {
+          if (!canPaste())
+            return false;
+          if (text) {
+            view.dispatch(view.state.tr.setSelection(pasteSelection));
+            view.pasteText(text);
+          }
+          view.focus();
+          return true;
+        }
+      };
+    },
     captureDictationTarget: () => {
       if (!editor.isEditable || !sceneId)
         return null;
       const doc3 = editor.state.doc;
-      const generation = dictationSourceGeneration;
+      const generation = sourceGeneration;
       const position = editor.state.selection.to;
       return {
         insert: (text) => {
-          if (!editor.isEditable || generation !== dictationSourceGeneration || !doc3.eq(editor.state.doc) || !root.isConnected)
+          if (!editor.isEditable || generation !== sourceGeneration || !doc3.eq(editor.state.doc) || !root.isConnected)
             return false;
           const before = doc3.textBetween(Math.max(0, position - 1), position);
           const after = doc3.textBetween(position, Math.min(doc3.content.size, position + 1));
@@ -25424,7 +25446,7 @@ ${comment.body}`,
       };
     },
     setText: (text, comments = [], editable = true, dialogue = []) => {
-      dictationSourceGeneration++;
+      sourceGeneration++;
       editor.commands.setContent(textToHtml(text), { emitUpdate: false, parseOptions: { preserveWhitespace: "full" } });
       setAnnotations([]);
       editor.setEditable(Boolean(editable), false);

@@ -5,7 +5,11 @@ const form = section?.querySelector("form");
 const input = section?.querySelector("input");
 const results = section?.querySelector("[data-thesaurus-results]");
 const status = section?.querySelector("[data-thesaurus-status]");
+const copyButton = menu?.querySelector("[data-context-copy]");
+const pasteButton = menu?.querySelector("[data-context-paste]");
+const clipboardStatus = menu?.querySelector("[data-context-clipboard-status]");
 let target;
+let clipboardTarget;
 let controller;
 let anchor = { x: 8, y: 8 };
 
@@ -17,6 +21,7 @@ function positionMenu() {
 function closeMenu() {
   controller?.abort();
   target = null;
+  clipboardTarget = null;
   if (menu) menu.hidden = true;
 }
 
@@ -87,16 +92,22 @@ editor?.addEventListener("contextmenu", (event) => {
   if (event.shiftKey) { closeMenu(); return; }
   if (!menu) return;
   const next = window.verwrityEditor?.getContextTarget(event.clientX, event.clientY);
-  if (!next) { closeMenu(); return; }
+  const clipboard = window.verwrityEditor?.captureClipboardTarget(event.clientX, event.clientY);
+  if (!next && !clipboard?.canPaste && !clipboard?.text) { closeMenu(); return; }
   event.preventDefault();
   closeMenu();
   target = next;
+  clipboardTarget = clipboard;
   anchor = { x: event.clientX || 8, y: event.clientY || 8 };
   menu.hidden = false;
-  menu.querySelector("[data-add-comment]").disabled = !next.canReplace;
-  menu.querySelector("[data-create-wiki]").disabled = !next.canReplace;
+  copyButton.disabled = !clipboard?.text;
+  pasteButton.disabled = !clipboard?.canPaste;
+  clipboardStatus.hidden = true;
+  menu.querySelector("[data-add-comment]").disabled = !next?.canReplace;
+  menu.querySelector("[data-create-wiki]").disabled = !next?.canReplace;
+  menu.querySelector("[data-assign-speaker]").disabled = !next?.canReplace;
   window.dispatchEvent(new CustomEvent("verwrity-context-opened", { detail: next }));
-  const word = next.range.quote.trim();
+  const word = next?.range.quote.trim() || "";
   section.hidden = !/^[\p{L}\p{M}]+(?:['’ -][\p{L}\p{M}]+)*$/u.test(word) || word.length > 80;
   if (!section.hidden) {
     input.value = word;
@@ -104,9 +115,35 @@ editor?.addEventListener("contextmenu", (event) => {
   }
   positionMenu();
   if (!event.clientX && !event.clientY) {
-    (section.hidden ? menu.querySelector("[data-close-context]") : input)?.focus();
+    (section.hidden ? menu.querySelector("button:not(:disabled)") : input)?.focus();
   }
 });
+
+async function useClipboard(action) {
+  const snapshot = clipboardTarget;
+  try {
+    if (action === "copy") {
+      await navigator.clipboard.writeText(snapshot.text);
+    } else {
+      const text = await navigator.clipboard.readText();
+      if (snapshot !== clipboardTarget) return;
+      if (!snapshot.paste(text)) throw new Error("Paste target changed");
+    }
+    if (snapshot === clipboardTarget) {
+      closeMenu();
+      window.verwrityEditor?.focus();
+    }
+  } catch (_) {
+    if (snapshot !== clipboardTarget) return;
+    clipboardStatus.textContent = action === "copy"
+      ? "Clipboard access failed. Press Escape, then use your copy shortcut."
+      : "Clipboard access failed. Press Escape, then use your paste shortcut.";
+    clipboardStatus.hidden = false;
+    positionMenu();
+  }
+}
+copyButton?.addEventListener("click", () => useClipboard("copy"));
+pasteButton?.addEventListener("click", () => useClipboard("paste"));
 form?.addEventListener("submit", (event) => { event.preventDefault(); if (target) lookup(); });
 results?.addEventListener("toggle", positionMenu, true);
 menu?.querySelector("[data-close-context]")?.addEventListener("click", () => { closeMenu(); window.verwrityEditor?.focus(); });

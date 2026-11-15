@@ -111,6 +111,7 @@ def workspace_context() -> dict[str, object]:
         "wiki_page_hashes": {str(page.id): page_hash(page) for page in project.wiki_pages},
         "wiki_source_hash": manuscript_hash(project),
         "active_scene": selected,
+        "default_note_colors": ("#f5e8a9", "#f2dda0", "#f6edbd"),
         "scene_source_hash": scene_source_hash(selected) if selected else "",
         "scene_comments": [comment.as_dict() for comment in selected.comments] if selected else [],
         "scene_dialogue": [item.as_dict() for item in selected.dialogue] if selected else [],

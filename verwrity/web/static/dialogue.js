@@ -135,7 +135,7 @@ speakerForm?.addEventListener("submit", async event => {
   finally { submit.disabled = false; }
 });
 
-window.addEventListener("verwrity-context-opened", event => { contextRange = event.detail.range; });
+window.addEventListener("verwrity-context-opened", event => { contextRange = event.detail?.range; });
 document.querySelectorAll("[data-assign-speaker]").forEach(node => {
   node.addEventListener("mousedown", event => event.preventDefault());
   node.addEventListener("click", () => {

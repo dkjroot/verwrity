@@ -499,13 +499,38 @@ window.addEventListener("verwrity-editor-ready", () => {
   refreshAnalysisStale();
 });
 
-// Persist the active scene before switching, moving, removing, or creating one.
+let sceneNavigationVersion = 0;
+let sceneNavigationSubmitted = false;
+window.verwritySceneNavigation = {
+  get version() { return sceneNavigationVersion; },
+  async submit(form, beforeSubmit) {
+    if (sceneNavigationSubmitted) return;
+    const version = ++sceneNavigationVersion;
+    if (!(await window.verwritySaveActiveScene()) || version !== sceneNavigationVersion) return;
+    if (await window.verwrityWiki?.prepareSceneNavigation() === false || version !== sceneNavigationVersion) return;
+    // An edit can arrive while the wiki buffer is being preserved.
+    if (dirty && !(await window.verwritySaveActiveScene())) return;
+    if (version !== sceneNavigationVersion) return;
+    beforeSubmit?.();
+    sceneNavigationSubmitted = true;
+    const sceneButton = form.querySelector(".scene");
+    if (sceneButton) setSaveStatus(`Opening ${sceneButton.textContent.trim()}…`, "saving");
+    window.verwrityAllowUnload();
+    form.submit();
+  },
+};
+
+// Persist the active scene before switching, moving, or removing one.
 document.querySelectorAll(".storyboard form").forEach((form) => form.addEventListener("submit", async (event) => {
   if (event.defaultPrevented) return;
   event.preventDefault();
+  if (form.action.includes("/scene/select/")) {
+    await window.verwritySceneNavigation.submit(form);
+    return;
+  }
   if (!(await window.verwritySaveActiveScene())) return;
   if (await window.verwrityWiki?.prepareSceneNavigation() === false) return;
-  if (!form.action.includes("/scene/select/")) setProjectNeedsNamedSave(true);
+  setProjectNeedsNamedSave(true);
   dirty = false;
   window.verwrityAllowUnload();
   form.submit();

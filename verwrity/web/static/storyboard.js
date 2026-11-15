@@ -151,7 +151,7 @@ if (gridForm) {
   });
 }
 
-document.querySelectorAll(".scene-row.has-note-color").forEach(row => {
+document.querySelectorAll(".scene-row.has-note-color, [data-manuscript-scene-title]").forEach(row => {
   const hex = row.style.getPropertyValue("--scene-note-color").trim(); if (!/^#[0-9a-f]{6}$/i.test(hex)) return;
   const c = hex.slice(1).match(/../g).map(v => parseInt(v, 16) / 255).map(v => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4);
   row.style.setProperty("--scene-note-ink", c[0] * .2126 + c[1] * .7152 + c[2] * .0722 > .179 ? "#111111" : "#ffffff");

@@ -50,7 +50,7 @@ let annotationOptions = {
 };
 let typewriterMode = document.querySelector("[data-workspace]")?.dataset.typewriterMode === "true";
 let caretMovementEnabled = false;
-let dictationSourceGeneration = 0;
+let sourceGeneration = 0;
 
 const cursorMovementKeys = new Set(["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown", "Delete"]);
 function handleTypewriterKeyDown(_view, event) {
@@ -81,7 +81,7 @@ const editor = new Editor({
   editable: Boolean(sceneId),
   parseOptions: { preserveWhitespace: "full" },
   onTransaction: ({ editor: instance, transaction }) => {
-    if (transaction.docChanged) dictationSourceGeneration++;
+    if (transaction.docChanged) sourceGeneration++;
     updatePassageToggle(instance);
   },
   element: root,
@@ -211,15 +211,37 @@ window.verwrityEditor = {
   getText,
   getContextTarget: (x, y) => contextTarget(editor, root, x, y,
     () => editor.isEditable && (!typewriterMode || caretMovementEnabled)),
+  captureClipboardTarget: (x, y) => {
+    const view = editor.view;
+    const { doc, selection } = view.state;
+    const generation = sourceGeneration;
+    const hit = selection.empty && (x || y) ? view.posAtCoords({ left: x, top: y }) : null;
+    const pasteSelection = hit ? TextSelection.near(doc.resolve(hit.pos)) : selection;
+    const canPaste = () => root.isConnected && generation === sourceGeneration
+      && editor.isEditable && (!typewriterMode || caretMovementEnabled);
+    return {
+      text: selection.empty ? "" : view.serializeForClipboard(selection.content()).text,
+      canPaste: canPaste(),
+      paste: (text) => {
+        if (!canPaste()) return false;
+        if (text) {
+          view.dispatch(view.state.tr.setSelection(pasteSelection));
+          view.pasteText(text);
+        }
+        view.focus();
+        return true;
+      },
+    };
+  },
   captureDictationTarget: () => {
     if (!editor.isEditable || !sceneId) return null;
     const doc = editor.state.doc;
-    const generation = dictationSourceGeneration;
+    const generation = sourceGeneration;
     const position = editor.state.selection.to;
     return {
       insert: (text) => {
         // Reject stale targets instead of replacing text edited while STT ran.
-        if (!editor.isEditable || generation !== dictationSourceGeneration || !doc.eq(editor.state.doc) || !root.isConnected) return false;
+        if (!editor.isEditable || generation !== sourceGeneration || !doc.eq(editor.state.doc) || !root.isConnected) return false;
         const before = doc.textBetween(Math.max(0, position - 1), position);
         const after = doc.textBetween(position, Math.min(doc.content.size, position + 1));
         const value = (/\S/u.test(before) ? " " : "") + text.replace(/\r\n?/gu, "\n") + (/\S/u.test(after) ? " " : "");
@@ -242,7 +264,7 @@ window.verwrityEditor = {
     };
   },
   setText: (text, comments = [], editable = true, dialogue = []) => {
-    dictationSourceGeneration++;
+    sourceGeneration++;
     editor.commands.setContent(textToHtml(text), { emitUpdate: false, parseOptions: { preserveWhitespace: "full" } });
     setAnnotations([]);
     editor.setEditable(Boolean(editable), false);

@@ -85,6 +85,8 @@ if (metadataDialog) {
           form.querySelector('button').setAttribute('aria-label', direction ? `Move ${result.title} ${direction}` : `Remove ${result.title}`);
         });
       }
+      const manuscriptTitle = document.querySelector(`[data-manuscript-scene-title="${selector}"]`);
+      if (manuscriptTitle) manuscriptTitle.textContent = result.title;
       const note = document.querySelector(`[data-story-note][data-scene-id="${selector}"]`);
       if (note) {
         note.querySelector('h3').textContent = result.title;

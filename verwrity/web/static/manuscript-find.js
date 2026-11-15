@@ -119,13 +119,15 @@ function reflectMatchButtons() {
   for (const name of ['previous', 'next']) bar?.querySelector(`[data-find-${name}]`)?.toggleAttribute('disabled', !matches.length);
 }
 function goToMatch(direction, first = false) {
-  const navigate = () => navigateToMatch(direction, first);
+  const navigationVersion = window.verwritySceneNavigation.version;
+  const navigate = () => navigateToMatch(direction, first, navigationVersion);
   matchNavigation = matchNavigation.then(navigate, navigate);
   return matchNavigation;
 }
-async function navigateToMatch(direction, first) {
+async function navigateToMatch(direction, first, navigationVersion) {
+  if (navigationVersion !== window.verwritySceneNavigation.version) return;
   window.clearTimeout(searchTimer);
-  if (!await updateSearch() || !matches.length) return;
+  if (!await updateSearch() || !matches.length || navigationVersion !== window.verwritySceneNavigation.version) return;
   matchIndex = first ? 0 : matchIndex < 0 ? (direction < 0 ? matches.length - 1 : 0) : (matchIndex + direction + matches.length) % matches.length;
   const match = matches[matchIndex];
   if (match.sceneId === window.verwrityEditor?.sceneId) {
@@ -134,11 +136,12 @@ async function navigateToMatch(direction, first) {
     window.verwrityEditor.selectSourceRange(match.start, match.end); window.verwrityEditor.focus();
     countOutput.textContent = `${matchIndex + 1} of ${matches.length} matches`;
   } else {
-    if (await window.verwritySaveActiveScene?.() === false || await window.verwrityWiki?.prepareSceneNavigation() === false) return;
-    pendingMatch = match; saveState();
     const form = document.createElement('form'); form.method = 'POST'; form.action = `/scene/select/${match.sceneId}`;
     const input = document.createElement('input'); input.type = 'hidden'; input.name = 'expected_project_id'; input.value = projectId; form.append(input);
-    document.body.append(form); window.verwrityAllowUnload?.(); form.submit();
+    await window.verwritySceneNavigation.submit(form, () => {
+      pendingMatch = match; saveState();
+      document.body.append(form);
+    });
   }
 }
 
@@ -261,10 +264,13 @@ window.addEventListener("verwrity-editor-change", scheduleSearch);
 async function restoreOpenSearch() {
   if (!restoredState.open || !bar) return;
   bar.hidden = false;
+  const arrivingMatch = pendingMatch;
+  pendingMatch = null;
+  saveState();
+  const navigationVersion = window.verwritySceneNavigation.version;
   await updateSearch();
-  if (pendingMatch) {
-    const index = matches.findIndex(match => match.sceneId === pendingMatch.sceneId && match.start === pendingMatch.start && match.quote === pendingMatch.quote);
-    pendingMatch = null; saveState();
+  if (arrivingMatch && arrivingMatch.sceneId === window.verwrityEditor?.sceneId && navigationVersion === window.verwritySceneNavigation.version) {
+    const index = matches.findIndex(match => match.sceneId === arrivingMatch.sceneId && match.start === arrivingMatch.start && match.quote === arrivingMatch.quote);
     if (index >= 0) { matchIndex = index - 1; await goToMatch(1); }
   }
 }

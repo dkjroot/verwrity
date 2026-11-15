@@ -55,12 +55,37 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
     assert.equal((await page.evaluate(() => window.verwrityEditor.getSelectedRange())).quote, 'Mara', 'Replace selects the next remaining match');
     await page.waitForFunction(() => document.querySelector('[data-find-count]').textContent === '1 of 2 matches');
 
-    await Promise.all([
-      page.waitForNavigation(),
-      page.locator(`.scene-row[data-scene-id="${sceneIds[1]}"] .scene`).click(),
-    ]);
+    const selectRequests = [];
+    page.on("request", request => {
+      if (request.url().includes("/scene/select/")) selectRequests.push(request.url().split("/").at(-1));
+    });
+    let releaseSave;
+    const saveGate = new Promise(resolve => { releaseSave = resolve; });
+    const saveUrl = `**/scene/${sceneIds[0]}/text`;
+    await page.route(saveUrl, async route => { await saveGate; await route.continue(); });
+    try {
+      await page.evaluate(() => {
+        const text = "Mara sees Nia. Draft edit.";
+        window.verwrityEditor.setText(text);
+        window.dispatchEvent(new CustomEvent("verwrity-editor-change", { detail: { text } }));
+      });
+      const waitForSave = page.waitForRequest(request => request.url().endsWith(`/scene/${sceneIds[0]}/text`));
+      await page.locator(`.scene-row[data-scene-id="${sceneIds[0]}"] .scene`).click();
+      await waitForSave;
+      await page.locator(`.scene-row[data-scene-id="${sceneIds[1]}"] .scene`).click();
+      assert.deepEqual(selectRequests, [], "Scene navigation waits for the dirty draft to save");
+      const navigation = page.waitForNavigation();
+      releaseSave();
+      await navigation;
+    } finally {
+      releaseSave();
+      await page.unroute(saveUrl);
+    }
     await page.evaluate(() => document.querySelector("#start-dialog")?.close());
     await page.waitForFunction(() => window.verwrityEditor?.getText() === "MARA waits.");
+    assert.deepEqual(selectRequests, [sceneIds[1]], "Only the latest scene choice is submitted");
+    assert.equal(await page.locator("[data-manuscript-scene-title]").getAttribute("data-manuscript-scene-title"), sceneIds[1]);
+    assert.equal(await page.locator("[data-manuscript-scene-title]").textContent(), await page.locator(".scene[aria-current=true]").textContent());
     assert.equal(await page.locator("[data-find-bar]").isVisible(), true, "project search stays open after switching scenes");
     assert.equal(await page.locator("[data-find-query]").inputValue(), "mara", "the search query survives scene navigation");
     await page.waitForFunction(() => document.querySelector("[data-find-count]")?.textContent === "2 matches");
@@ -86,7 +111,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
       page.locator(`.scene-row[data-scene-id="${sceneIds[0]}"] .scene`).click(),
     ]);
     await page.evaluate(() => document.querySelector("#start-dialog")?.close());
-    await page.waitForFunction(() => window.verwrityEditor?.getText() === "Nia sees Nia.");
+    await page.waitForFunction(() => window.verwrityEditor?.getText() === "Nia sees Nia. Draft edit.");
     assert.equal(await page.locator("[data-find-bar]").isVisible(), true, "search stays open when returning to another scene");
 
     await page.locator("[data-close-find]").click();
@@ -99,9 +124,21 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
     assert.equal(await page.locator("[data-find-bar]").isVisible(), false);
     await page.locator(".versions-menu").evaluate(element => { element.open = true; });
     await page.locator("[data-scene-revision-select]").selectOption("head");
-    await page.waitForFunction(() => window.verwrityEditor?.getText() === "Nia sees Nia.");
+    await page.waitForFunction(() => window.verwrityEditor?.getText() === "Nia sees Nia. Draft edit.");
     await page.locator("[data-scene-revision-select]").selectOption({ label: "Revision 1" });
     await page.waitForFunction(() => window.verwrityEditor?.getText() === "Mara previous.");
+
+    await page.locator(".versions-menu").evaluate(element => { element.open = false; });
+    await page.locator("[data-open-find]").click();
+    await query.fill("nia");
+    await page.waitForFunction(() => document.querySelector("[data-find-count]")?.textContent === "3 matches");
+    await page.locator("[data-find-run]").click();
+    await page.waitForFunction(() => document.querySelector("[data-find-count]")?.textContent === "1 of 3 matches");
+    await page.locator("[data-find-next]").click();
+    await page.waitForFunction(() => document.querySelector("[data-find-count]")?.textContent === "2 of 3 matches");
+    await Promise.all([page.waitForNavigation(), page.locator("[data-find-next]").click()]);
+    await page.waitForFunction(sceneId => window.verwrityEditor?.sceneId === sceneId
+      && window.verwrityEditor.getSelectedRange()?.quote === "Nia", sceneIds[1]);
     assert.deepEqual(errors, [], "find and replace produces no browser errors");
     console.log("PASS: find and replace opens with Ctrl+F, marks current scenes, replaces project heads, and clears highlights.");
   } finally {
