@@ -79,6 +79,10 @@
   width: var(--paper-width) !important;
 }
 
+/* Keep leading whitespace with the first character when a page spacer
+   pushes a paragraph's opening line onto the next page. */
+.editor-stage[data-layout="single"] .ProseMirror .verwrity-paragraph-opening { white-space: pre; }
+
 /* The pagination footer lives inside the paper's bottom margin. Its text must
    not add another line box to the physical page height. */
 .editor .ProseMirror .rm-page-header,

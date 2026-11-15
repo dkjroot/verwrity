@@ -42,15 +42,24 @@ function paragraphDecorations(doc) {
   const decorations = [];
   doc.forEach((block, offset) => {
     if (block.type.name !== "paragraph") return;
-    const leading = paragraphIndentation(block.textContent);
+    const text = block.textBetween(0, block.content.size, "", "\n");
+    const leading = paragraphIndentation(text);
     decorations.push(Decoration.node(offset, offset + block.nodeSize, {
       "data-paragraph-kind": leading ? "running" : "section",
       // A CSS glyph cannot become manuscript text, copied prose or an undo step.
-      class: preferences.sectionMarkers && !leading && block.textContent.trim() ? "verwrity-section-start" : "",
+      class: preferences.sectionMarkers && !leading && text.trim() ? "verwrity-section-start" : "",
     }));
-    if (leading && !preferences.indentation) decorations.push(Decoration.inline(offset + 1, offset + 1 + leading.length, {
-      class: "verwrity-hidden-indent",
-    }));
+    if (!leading) return;
+    const start = offset + 1;
+    const indentEnd = start + leading.length;
+    if (!preferences.indentation) {
+      decorations.push(Decoration.inline(start, indentEnd, { class: "verwrity-hidden-indent" }));
+      return;
+    }
+    const firstCharacter = /^\S/u.exec(text.slice(leading.length))?.[0];
+    if (firstCharacter) {
+      decorations.push(Decoration.inline(start, indentEnd + firstCharacter.length, { class: "verwrity-paragraph-opening" }));
+    }
   });
   return DecorationSet.create(doc, decorations);
 }
