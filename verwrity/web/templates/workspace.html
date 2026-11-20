@@ -2,7 +2,7 @@
 {% block title %}{{ project.title }} · Verwrity{% endblock %}
 {% block body_attributes %}class="writing-workspace"{% endblock %}
 {% block body %}
-<header class="toolbar"><h1>Verwrity</h1><span class="project-name">{{ project.title }}</span>
+<header class="toolbar"><h1><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><path d="M16 8 2 22"/><path d="M17.5 15H9"/></svg></span>Verwrity</h1><span class="project-name">{{ project.title }}</span>
   <button class="panel-toggle" type="button" data-file-operations aria-haspopup="dialog">File operations</button>
   <button class="panel-toggle project-save" type="button" data-save-project title="Save project (Ctrl+S)">Save</button>
   <span data-world-controls></span>
@@ -278,7 +278,7 @@
           </div>
         </details>
         <label class="project-question-input-label"><span class="visually-hidden">Ask anything about the project</span><textarea name="question" rows="1" maxlength="4000" required placeholder="Ask anything about your manuscript and wiki…"></textarea></label>
-        <label class="answer-speaker" title="Read answers aloud"><input name="read_aloud" type="checkbox" disabled aria-label="Read answers aloud"><span aria-hidden="true">♫</span></label>
+        <label class="answer-speaker" title="Read answers aloud"><input name="read_aloud" type="checkbox" disabled aria-label="Read answers aloud"><span aria-hidden="true"><svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg></span></label>
         <button type="button" class="dictation-button" data-dictation-target="question" aria-label="Start question dictation" title="Start question dictation">🎙</button>
         <button type="submit" data-project-question-submit>Ask</button>
         <button type="button" data-cancel-project-question hidden>Cancel</button>
